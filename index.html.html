@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARLIZEN RENT CAR — Gestion Location</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#14171c;
+    --bg-panel:#1b1f27;
+    --bg-elevated:#232834;
+    --bg-elevated-2:#2a3040;
+    --accent:#f2a93b;
+    --accent-dim:#8a6524;
+    --danger:#e8542a;
+    --success:#4caf6d;
+    --text:#ece9e2;
+    --text-dim:#98a0ac;
+    --border:#2e3440;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Oswald', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);}
+  #app{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+
+  /* header */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .plate{
+    font-family:var(--mono);font-weight:600;letter-spacing:1.2px;
+    background:var(--text);color:var(--bg);border-radius:6px;
+    padding:6px 12px;font-size:12px;white-space:nowrap;border:2px solid var(--bg);
+    box-shadow:0 0 0 2px var(--accent);
+  }
+  .brand h1{font-family:var(--disp);font-weight:600;font-size:22px;margin:0;letter-spacing:.5px;text-transform:uppercase;}
+  .brand p{margin:2px 0 0;color:var(--text-dim);font-size:12.5px;}
+
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;background:var(--bg-panel);padding:6px;border-radius:12px;border:1px solid var(--border);}
+  nav.tabs button{
+    background:transparent;border:none;color:var(--text-dim);font-family:var(--disp);
+    font-size:13px;letter-spacing:.6px;text-transform:uppercase;padding:9px 14px;border-radius:8px;cursor:pointer;
+    transition:.15s;
+  }
+  nav.tabs button:hover{color:var(--text);background:var(--bg-elevated);}
+  nav.tabs button.active{background:var(--accent);color:#1a1305;font-weight:600;}
+
+  .view{display:none;}
+  .view.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px;}
+  .panel h2{font-family:var(--disp);text-transform:uppercase;letter-spacing:.6px;font-size:16px;margin:0 0 4px;color:var(--accent);}
+  .panel .sub{color:var(--text-dim);font-size:12.5px;margin:0 0 16px;}
+
+  /* KPI grid */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+  .kpi{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;}
+  .kpi .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;}
+  .kpi .value{font-family:var(--mono);font-size:26px;font-weight:600;margin-top:6px;}
+  .kpi.accent .value{color:var(--accent);}
+  .kpi.danger .value{color:var(--danger);}
+  .kpi.success .value{color:var(--success);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{text-align:left;color:var(--text-dim);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border);}
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr:hover{background:var(--bg-elevated);}
+  td.num, .mono{font-family:var(--mono);}
+  .tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;}
+  .tag.ok{background:rgba(76,175,109,.15);color:var(--success);}
+  .tag.warn{background:rgba(242,169,59,.18);color:var(--accent);}
+  .tag.bad{background:rgba(232,84,42,.18);color:var(--danger);}
+
+  input,select,textarea{
+    background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:9px 10px;font-family:var(--body);font-size:13.5px;width:100%;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  label{display:block;font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+  .field{margin-bottom:12px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .btn{
+    background:var(--accent);color:#1a1305;border:none;border-radius:9px;padding:10px 18px;
+    font-family:var(--disp);text-transform:uppercase;letter-spacing:.5px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.danger{background:var(--danger);color:#fff;}
+  .btn.small{padding:6px 11px;font-size:11.5px;border-radius:7px;}
+  .row-actions{display:flex;gap:6px;}
+
+  .preview-box{background:var(--bg-elevated);border:1px dashed var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--text-dim);margin-top:8px;}
+  .preview-box b{color:var(--text);}
+  .empty{color:var(--text-dim);font-size:13px;padding:20px 4px;text-align:center;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--accent);color:#1a1305;
+    padding:11px 20px;border-radius:10px;font-weight:600;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.4);
+    opacity:0;pointer-events:none;transition:.3s;z-index:999;}
+  .toast.show{opacity:1;transform:translate(-50%,-6px);}
+
+  /* contract print */
+  #contractPrint{display:none;}
+  .contract-select{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
+  .contract-select .field{flex:1;min-width:220px;margin-bottom:0;}
+  .contract-doc{background:#f4f1ea;color:#1a1a1a;border-radius:10px;padding:16mm 18mm;font-family:'Inter',sans-serif;width:210mm;min-height:297mm;margin:0 auto 14px;box-sizing:border-box;font-size:13px;line-height:1.45;display:flex;flex-direction:column;}
+  .letterhead{text-align:center;border-bottom:2px solid #1a1a1a;padding-bottom:10px;margin-bottom:16px;}
+  .letterhead .lh-top{font-family:'Oswald',sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+  .letterhead .lh-sarl{font-family:'Oswald',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:2px 0;}
+  .letterhead .lh-meta{font-size:11px;color:#444;font-family:'JetBrains Mono',monospace;margin-top:3px;}
+  .contract-doc h2{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:20px;margin:0 0 16px;}
+  .contract-doc table{margin-bottom:14px;width:100%;}
+  .contract-doc thead th{color:#555;border-color:#ccc;padding:6px 10px;font-size:11px;}
+  .contract-doc tbody td{border-color:#ccc;color:#222;padding:7px 10px;font-size:13px;}
+  .contract-doc .cblock{margin-bottom:16px;}
+  .contract-doc .cblock h3{font-family:'Oswald',sans-serif;font-size:13.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--accent-dim);padding-bottom:4px;margin-bottom:8px;}
+  .contract-doc .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .contract-doc p.nb{font-size:11.5px;font-style:italic;margin:8px 0;}
+  .contract-doc .sign-area{margin-top:auto;min-height:100mm;display:flex;flex-direction:column;justify-content:flex-end;}
+  .contract-doc .sign-area p.nb{margin-top:0;}
+  .contract-doc .sign{display:flex;justify-content:space-between;margin-top:40px;font-size:13px;}
+  .contract-doc .sign div{border-top:1px solid #999;padding-top:26px;width:42%;text-align:center;}
+  .annexe-head{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:13px;margin:0 0 8px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;}
+  .annexe-cols{column-count:2;column-gap:9mm;column-rule:1px solid #ccc;}
+  .annexe h3{font-family:'Oswald',sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.2px;margin:7px 0 2px;break-after:avoid;}
+  .annexe .art{break-inside:avoid;margin-bottom:2px;}
+  .annexe p, .annexe li{font-size:8.2px;line-height:1.28;color:#222;}
+  .annexe p{margin:1px 0;}
+  .annexe ul{margin:1px 0 3px 11px;padding:0;}
+  .annexe .sign-line{margin-top:10px;font-size:9px;}
+  .page-break{page-break-before:always;}
+
+  @media print{
+    @page{size:A4;margin:0;}
+    body *{visibility:hidden;}
+    #contractPrint, #contractPrint *{visibility:visible;}
+    #contractPrint{display:block;position:absolute;top:0;left:0;width:100%;}
+    .contract-doc{border-radius:0;margin:0;width:210mm;height:297mm;min-height:297mm;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div class="panel" style="max-width:380px;width:100%;margin:0;">
+    <div style="text-align:center;margin-bottom:18px;">
+      <div class="plate" style="display:inline-block;">CARLIZEN RENT CAR</div>
+      <h2 style="margin-top:14px;">Connexion</h2>
+      <p class="sub">Accès réservé — 3 comptes autorisés</p>
+    </div>
+    <div class="field"><label>Identifiant</label><input id="login_user" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login_pass').focus()"></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="login_pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="login_remember" checked style="width:auto;">
+      <label style="margin:0;text-transform:none;font-size:12.5px;color:var(--text-dim);">Rester connecté sur cet ordinateur</label>
+    </div>
+    <button class="btn" style="width:100%" onclick="doLogin()">Se connecter</button>
+    <p id="loginError" style="color:var(--danger);font-size:12.5px;margin-top:10px;text-align:center;display:none;">Identifiant ou mot de passe incorrect.</p>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+
+  <div class="topbar">
+    <div class="brand">
+      <img id="topLogo" style="display:none;height:40px;width:40px;object-fit:contain;background:#fff;border-radius:8px;padding:4px;">
+      <div class="plate">CARLIZEN RENT CAR</div>
+      <div>
+        <h1>Gestion Location Véhicules</h1>
+        <p>Base de données unique — flotte, clients, locations &amp; contrats</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="dashboard" class="active">Tableau de bord</button>
+      <button data-view="locations">Locations</button>
+      <button data-view="flotte">Flotte</button>
+      <button data-view="clients">Clients</button>
+      <button data-view="contrat">Contrat</button>
+      <button data-view="comptes" id="tabComptes">🔐 Comptes</button>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="whoami" class="sub" style="margin:0;"></span>
+      <button class="btn ghost small" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2>Résumé de l'activité</h2>
+          <p class="sub">Calculé automatiquement à partir des locations enregistrées</p>
+        </div>
+        <button class="btn" onclick="exportComptabilite()">📊 Extraire la comptabilité (Excel)</button>
+      </div>
+      <div class="kpis" id="kpiGrid"></div>
+    </div>
+    <div class="panel">
+      <h2>Locations en cours</h2>
+      <p class="sub">Véhicules non encore rendus</p>
+      <div id="ongoingTable"></div>
+    </div>
+    <div class="panel">
+      <h2>💾 Sauvegarde de sécurité</h2>
+      <p class="sub">Tes données sont enregistrées automatiquement sur cet ordinateur à chaque ajout, modification ou suppression. Télécharge une sauvegarde régulièrement pour ne rien perdre si tu changes d'ordinateur ou de navigateur, ou pour transférer tes données ailleurs.</p>
+      <div class="row-actions">
+        <button class="btn" onclick="exportBackup()">⬇️ Télécharger une sauvegarde</button>
+        <button class="btn ghost admin-only" onclick="document.getElementById('backupFileInput').click()">⬆️ Restaurer une sauvegarde</button>
+        <input type="file" id="backupFileInput" accept="application/json" style="display:none" onchange="importBackup(event)">
+      </div>
+      <p class="sub" id="lastBackupInfo" style="margin-top:10px;"></p>
+    </div>
+  </section>
+
+  <!-- LOCATIONS -->
+
+  <section class="view" id="view-locations">
+    <div class="panel admin-only">
+      <h2>Nouvelle location</h2>
+      <p class="sub">Remplir les champs puis ajouter — le calcul se fait automatiquement</p>
+      <div class="grid3">
+        <div class="field">
+          <label>Véhicule</label>
+          <select id="f_vehicule"></select>
+          <div class="preview-box" id="prevVehicule">—</div>
+        </div>
+        <div class="field">
+          <label>Client <button type="button" class="btn small ghost admin-only" style="margin-left:6px;padding:2px 8px;" onclick="openQuickClient('f_client')">+ Nouveau client</button></label>
+          <select id="f_client"></select>
+          <div class="preview-box" id="prevClient">—</div>
+        </div>
+        <div class="field">
+          <label>Remise appliquée (DA)</label>
+          <input type="number" id="f_remise" value="0">
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Date départ</label><input type="date" id="f_dateDepart"></div>
+        <div class="field"><label>Km départ</label><input type="number" id="f_kmDepart" placeholder="ex: 12000"></div>
+        <div class="field"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Date retour (optionnel)</label><input type="date" id="f_dateRetour"></div>
+        <div class="field"><label>Km retour (optionnel)</label><input type="number" id="f_kmRetour"></div>
+        <div class="field" style="display:flex;align-items:flex-end;">
+          <button class="btn" style="width:100%" onclick="addRental()">+ Ajouter la location</button>
+        </div>
+      </div>
+      <div class="preview-box" id="prevCalc">Aperçu du calcul —</div>
+    </div>
+
+    <div class="panel">
+      <h2>Suivi des locations</h2>
+      <p class="sub">Toutes les locations enregistrées</p>
+      <div id="rentalsTable"></div>
+    </div>
+  </section>
+
+  <!-- FLOTTE -->
+  <section class="view" id="view-flotte">
+    <div class="panel admin-only">
+      <h2>Ajouter un véhicule</h2>
+      <div class="grid3">
+        <div class="field"><label>Véhicule</label><input id="v_nom" placeholder="ex: I10"></div>
+        <div class="field"><label>Immatriculation</label><input id="v_immat" placeholder="ex: 021459-118-16"></div>
+        <div class="field"><label>Prix / jour (DA)</label><input type="number" id="v_prix" placeholder="9000"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Km inclus / jour</label><input type="number" id="v_kminclus" value="350"></div>
+        <div class="field"><label>Prix km additionnel (DA)</label><input type="number" id="v_kmadd" value="20"></div>
+        <div class="field" style="display:flex;align-items:flex-end;"><button class="btn" style="width:100%" onclick="addVehicule()">+ Ajouter le véhicule</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Grille tarifaire de la flotte</h2>
+      <div id="fleetTable"></div>
+    </div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section class="view" id="view-clients">
+    <div class="panel admin-only">
+      <h2>Ajouter un client</h2>
+      <div class="grid3">
+        <div class="field"><label>Nom &amp; prénom</label><input id="c_nom" placeholder="ex: BENALI KARIM"></div>
+        <div class="field"><label>Téléphone</label><input id="c_tel" placeholder="06.."></div>
+        <div class="field"><label>Remise habituelle (DA)</label><input type="number" id="c_remise" value="0"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Date &amp; lieu de naissance</label><input id="c_naissance" placeholder="01/01/1990 à Relizane"></div>
+        <div class="field"><label>Adresse</label><input id="c_adresse" placeholder="Relizane"></div>
+        <div class="field"><label>N° Permis de conduire</label><input id="c_permis" placeholder="PC A0..."></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Permis délivré par (daïra)</label><input id="c_delivre" placeholder="Relizane"></div>
+        <div class="field"><label>Observation</label><input id="c_obs" placeholder="optionnel"></div>
+        <div class="field" style="display:flex;align-items:flex-end;"><button class="btn" style="width:100%" onclick="addClient()">+ Ajouter le client</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Base de données clients</h2>
+      <div id="clientsTable"></div>
+    </div>
+  </section>
+
+  <!-- CONTRAT -->
+  <section class="view" id="view-contrat">
+    <div class="panel admin-only">
+      <h2>En-tête de l'agence</h2>
+      <p class="sub">Affiché en haut du contrat imprimé — à remplir une seule fois</p>
+      <div class="grid3">
+        <div class="field"><label>Raison sociale (SARL)</label><input id="ag_nom" value="CARLIZEN"></div>
+        <div class="field"><label>NIF</label><input id="ag_nif" value="002648016390468"></div>
+        <div class="field"><label>Téléphone</label><input id="ag_tel" value="0560063387"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>RC</label><input id="ag_rc" value="48/00-0163904 B 26"></div>
+        <div class="field"><label>Adresse</label><input id="ag_adresse" placeholder="Relizane"></div>
+        <div class="field">
+          <label>Logo de l'agence</label>
+          <input type="file" id="ag_logo" accept="image/*" onchange="handleLogoUpload(event)">
+        </div>
+      </div>
+      <div id="ag_logo_preview_wrap" style="display:none;align-items:center;gap:10px;margin-bottom:12px;">
+        <img id="ag_logo_preview" style="max-height:46px;max-width:140px;border-radius:6px;background:#fff;padding:4px;">
+        <button class="btn small ghost" onclick="removeLogo()">Retirer le logo</button>
+      </div>
+      <button class="btn ghost small" onclick="saveAgence()">Enregistrer l'en-tête</button>
+    </div>
+    <div class="panel">
+      <h2>Générer un contrat de location</h2>
+      <p class="sub">Rechercher par N° de contrat, N° de client, nom, véhicule ou date — puis sélectionner et imprimer</p>
+      <div class="field">
+        <label>Rechercher un contrat (actuel ou antérieur)</label>
+        <input id="ct_search" placeholder="ex: CT-0007, CL-0004, BENALI, SWIFT, 15/07/2026..." oninput="searchContracts()">
+      </div>
+      <div class="contract-select">
+        <div class="field">
+          <label>Location</label>
+          <select id="ct_rental" onchange="renderContract()"></select>
+        </div>
+        <div class="field" style="flex:0;">
+          <label>&nbsp;</label>
+          <button type="button" class="btn ghost admin-only" onclick="openQuickClient('ct_client_hint')">+ Nouveau client</button>
+        </div>
+        <div class="field">
+          <label>Lieu de signature</label>
+          <input id="ct_lieu" value="Relizane">
+        </div>
+        <div class="field">
+          <label>Date du contrat</label>
+          <input type="date" id="ct_date">
+        </div>
+        <button class="btn" onclick="renderContract()">Aperçu</button>
+        <button class="btn ghost" onclick="window.print()">🖨 Imprimer / PDF</button>
+      </div>
+      <div id="contractPreview" class="empty">Sélectionner une location pour prévisualiser le contrat.</div>
+    </div>
+  </section>
+
+  <!-- COMPTES -->
+  <section class="view" id="view-comptes">
+    <div class="panel">
+      <h2>Gestion des accès</h2>
+      <p class="sub">3 comptes maximum. Un seul compte "Modification" peut ajouter/modifier/supprimer des données ; les 2 autres sont en lecture seule (consultation et impression des contrats uniquement).</p>
+      <div id="accountsTable"></div>
+    </div>
+  </section>
+
+</div>
+
+<div id="contractPrint"></div>
+<div class="toast" id="toast"></div>
+
+<div id="quickClientOverlay" style="display:none;position:fixed;inset:0;background:rgba(10,12,16,.65);z-index:998;align-items:center;justify-content:center;padding:20px;">
+  <div class="panel" style="max-width:520px;width:100%;margin:0;max-height:88vh;overflow:auto;">
+    <h2>Nouveau client</h2>
+    <p class="sub">Ajouté directement à la base de données clients</p>
+    <div class="grid2">
+      <div class="field"><label>Nom &amp; prénom</label><input id="qc_nom" placeholder="ex: BENALI KARIM"></div>
+      <div class="field"><label>Téléphone</label><input id="qc_tel"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Remise habituelle (DA)</label><input type="number" id="qc_remise" value="0"></div>
+      <div class="field"><label>N° Permis de conduire</label><input id="qc_permis"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Date &amp; lieu de naissance</label><input id="qc_naissance" placeholder="01/01/1990 à Relizane"></div>
+      <div class="field"><label>Adresse</label><input id="qc_adresse"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Permis délivré par (daïra)</label><input id="qc_delivre"></div>
+      <div class="field"><label>Observation</label><input id="qc_obs"></div>
+    </div>
+    <div class="row-actions" style="justify-content:flex-end;margin-top:8px;">
+      <button class="btn ghost" onclick="closeQuickClient()">Annuler</button>
+      <button class="btn" onclick="saveQuickClient()">Ajouter le client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- STORAGE ---------- */
+/* Stockage hybride :
+   - Si l'app est ouverte dans Claude (artifact), les données sont sauvegardées
+     EN LIGNE sur ton compte Claude, gratuitement, accessibles depuis n'importe
+     quel appareil connecté au même compte (PC, téléphone...).
+   - Si le fichier est ouvert directement (double-clic, hors Claude), les
+     données sont sauvegardées localement dans ce navigateur.
+   Dans les deux cas, une copie locale est aussi gardée comme filet de sécurité,
+   et le bouton "Sauvegarde" permet d'exporter/importer un fichier de secours. */
+const STORAGE_PREFIX = 'carlizen_gestion_';
+const HAS_CLOUD = (typeof window!=='undefined' && window.storage && typeof window.storage.get==='function');
+async function loadKey(key, fallback){
+  if(HAS_CLOUD){
+    try{
+      const r = await window.storage.get(key, false);
+      if(r) return JSON.parse(r.value);
+    }catch(e){ /* pas encore de valeur en ligne, on retombe sur le local */ }
+  }
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    return raw!==null ? JSON.parse(raw) : fallback;
+  }catch(e){ console.error('storage read error', key, e); return fallback; }
+}
+async function saveKey(key, value){
+  let ok = true;
+  if(HAS_CLOUD){
+    try{ await window.storage.set(key, JSON.stringify(value), false); }
+    catch(e){ console.error('cloud storage write error', key, e); ok = false; }
+  }
+  try{ localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); }
+  catch(e){ console.error('local storage write error', key, e); }
+  return ok;
+}
+
+/* ---------- COMPTES / ACCÈS (3 comptes, 1 seul avec droit de modification) ---------- */
+let accounts = [];
+let currentUser = null;
+function simpleHash(str){
+  let h = 5381;
+  for(let i=0;i<str.length;i++){ h = ((h*33) ^ str.charCodeAt(i)) >>> 0; }
+  return h.toString(16);
+}
+const DEFAULT_ACCOUNTS = [
+  {username:'gerant', pass:'Carlizen2026', role:'admin', label:'Gérant — modification'},
+  {username:'employe1', pass:'Lecture2026a', role:'viewer', label:'Lecture seule 1'},
+  {username:'employe2', pass:'Lecture2026b', role:'viewer', label:'Lecture seule 2'},
+];
+async function loadAccounts(){
+  let saved = await loadKey('accounts', null);
+  if(!saved || !Array.isArray(saved) || saved.length!==3){
+    saved = DEFAULT_ACCOUNTS.map(a=>({username:a.username, passHash:simpleHash(a.pass), role:a.role, label:a.label}));
+    await saveKey('accounts', saved);
+  }
+  accounts = saved;
+}
+function findAccount(username){
+  return accounts.find(a=>a.username.toLowerCase()===String(username||'').trim().toLowerCase());
+}
+function isAdmin(){ return !!(currentUser && currentUser.role==='admin'); }
+function requireAdmin(){
+  if(!isAdmin()){ toast('Accès en lecture seule — modification non autorisée'); return false; }
+  return true;
+}
+async function doLogin(){
+  const u = document.getElementById('login_user').value;
+  const p = document.getElementById('login_pass').value;
+  const remember = document.getElementById('login_remember').checked;
+  const acc = findAccount(u);
+  const err = document.getElementById('loginError');
+  if(!acc || acc.passHash !== simpleHash(p)){
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  currentUser = {username:acc.username, role:acc.role, label:acc.label};
+  const sessionData = JSON.stringify(currentUser);
+  if(remember){ localStorage.setItem(STORAGE_PREFIX+'session', sessionData); }
+  else{ sessionStorage.setItem(STORAGE_PREFIX+'session', sessionData); }
+  showApp();
+}
+function doLogout(){
+  localStorage.removeItem(STORAGE_PREFIX+'session');
+  sessionStorage.removeItem(STORAGE_PREFIX+'session');
+  location.reload();
+}
+function checkExistingSession(){
+  const raw = localStorage.getItem(STORAGE_PREFIX+'session') || sessionStorage.getItem(STORAGE_PREFIX+'session');
+  if(!raw) return false;
+  try{
+    const sess = JSON.parse(raw);
+    const acc = findAccount(sess.username);
+    if(acc){ currentUser = {username:acc.username, role:acc.role, label:acc.label}; return true; }
+  }catch(e){}
+  return false;
+}
+function showApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('whoami').textContent = `${currentUser.label||currentUser.username} · ${currentUser.role==='admin'?'Modification':'Lecture seule'}`;
+  applyPermissions();
+  init();
+}
+function applyPermissions(){
+  const admin = isAdmin();
+  const tabComptes = document.getElementById('tabComptes');
+  if(tabComptes) tabComptes.style.display = admin ? 'inline-block' : 'none';
+  document.querySelectorAll('.admin-only').forEach(el=>{ el.style.display = admin ? '' : 'none'; });
+}
+function renderAccounts(){
+  const box = document.getElementById('accountsTable');
+  if(!box) return;
+  box.innerHTML = accounts.map((a,i)=>`
+    <div class="panel" style="background:var(--bg-elevated);margin-bottom:10px;">
+      <h3 style="font-family:var(--disp);text-transform:uppercase;font-size:13px;color:var(--accent);margin:0 0 10px;">${a.role==='admin' ? '🔓 Compte modification' : '👁 Compte lecture seule'} — ${a.label}</h3>
+      <div class="grid3">
+        <div class="field"><label>Identifiant</label><input id="acc_user_${i}" value="${a.username}"></div>
+        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="acc_pass_${i}" placeholder="(laisser vide = inchangé)"></div>
+        <div class="field" style="display:flex;align-items:flex-end;"><button class="btn small ghost" onclick="updateAccount(${i})">Enregistrer</button></div>
+      </div>
+    </div>`).join('');
+}
+async function updateAccount(i){
+  if(!requireAdmin()) return;
+  const u = document.getElementById('acc_user_'+i).value.trim();
+  const p = document.getElementById('acc_pass_'+i).value;
+  if(!u){ toast('Identifiant requis'); return; }
+  accounts[i].username = u;
+  if(p){ accounts[i].passHash = simpleHash(p); }
+  await saveKey('accounts', accounts);
+  document.getElementById('acc_pass_'+i).value = '';
+  if(currentUser && i===accounts.findIndex(a=>a.role==='admin' && a.username===u)){
+    currentUser.username = u;
+  }
+  toast('Compte mis à jour');
+}
+
+let fleet = [];
+let clients = [];
+let rentals = [];
+let agence = {nom:'CARLIZEN', nif:'002648016390468', nis:'', rc:'48/00-0163904 B 26', adresse:'', tel:'0560063387', logo:''};
+
+const SEED_FLEET = [
+  {id:'v1', nom:'SWIFT', immat:'500187-125-48', prixJour:12000, kmInclus:350, kmAdd:20, disponible:false},
+  {id:'v2', nom:'I10', immat:'021459-118-16', prixJour:9000, kmInclus:350, kmAdd:20, disponible:false},
+  {id:'v3', nom:'MG5', immat:'SN016631', prixJour:12000, kmInclus:350, kmAdd:20, disponible:true},
+  {id:'v4', nom:'KX1', immat:'T0215320', prixJour:12000, kmInclus:350, kmAdd:20, disponible:true},
+];
+const SEED_CLIENTS = [
+  {id:'c1', nom:'FEGHOUL MOHAMED-YASSINE', tel:'0771030489', remise:10000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c2', nom:'BENHALIMA NASSIM', tel:'0555642987', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c3', nom:'GADI MOHAMMED', tel:'0550202860', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c4', nom:'BENKABOUCHE LOTFI', tel:'0558722444', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c5', nom:'MADMOUN MOHAMED-HABIB', tel:'0774086479', remise:0, obs:'', naissance:'07/03/1984 à Relizane', adresse:'Relizane', permis:'PC A01339080', delivre:'Relizane'},
+  {id:'c6', nom:'ABOUBAKEUR WAWI', tel:'', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c7', nom:'BENKABOUCHE YASSINE', tel:'0770162037', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c8', nom:'BELAID ABDELKRIM', tel:'0551829554', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c9', nom:'MEKHENEF OUSSAMA', tel:'0556657303', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c10', nom:'ZOUAOUI YOUCEF', tel:'0776628053', remise:6000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c11', nom:'MOKADDEM ALI-ZINELAABIDINE', tel:'0770703783', remise:4000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+  {id:'c12', nom:'OUZAID AHMED', tel:'/', remise:0, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
+];
+const SEED_RENTALS = [
+  {id:'r1', vehId:'v1', cliId:'c1', dateDepart:'2026-06-17', kmDepart:12258, dateRetour:'2026-06-22', kmRetour:13265, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:10000},
+  {id:'r2', vehId:'v1', cliId:'c2', dateDepart:'2026-06-22', kmDepart:13268, dateRetour:'2026-06-23', kmRetour:13579, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r3', vehId:'v1', cliId:'c2', dateDepart:'2026-06-24', kmDepart:13700, dateRetour:'2026-06-25', kmRetour:13950, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r4', vehId:'v1', cliId:'c3', dateDepart:'2026-07-01', kmDepart:14000, dateRetour:'2026-07-02', kmRetour:14316, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r5', vehId:'v1', cliId:'c4', dateDepart:'2026-07-09', kmDepart:14316, dateRetour:'2026-07-10', kmRetour:14600, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r6', vehId:'v1', cliId:'c5', dateDepart:'2026-07-12', kmDepart:14897, dateRetour:'2026-07-14', kmRetour:15318, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:0},
+  {id:'r7', vehId:'v1', cliId:'c6', dateDepart:'2026-07-16', kmDepart:15900, dateRetour:'2026-07-17', kmRetour:16150, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r8', vehId:'v1', cliId:'c7', dateDepart:'2026-07-20', kmDepart:16885, dateRetour:'2026-07-21', kmRetour:17200, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r9', vehId:'v2', cliId:'c7', dateDepart:'2026-07-23', kmDepart:123359, dateRetour:'2026-07-24', kmRetour:123699, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r10', vehId:'v1', cliId:'c8', dateDepart:'2026-07-25', kmDepart:18090, dateRetour:'2026-07-26', kmRetour:18440, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r11', vehId:'v1', cliId:'c9', dateDepart:'2026-07-26', kmDepart:18532, dateRetour:'2026-07-27', kmRetour:18882, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+  {id:'r12', vehId:'v2', cliId:'c10', dateDepart:'2026-07-27', kmDepart:123729, dateRetour:'2026-07-30', kmRetour:124600, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:6000},
+  {id:'r13', vehId:'v1', cliId:'c12', dateDepart:'2026-07-27', kmDepart:18882, dateRetour:'2026-07-28', kmRetour:19232, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:0},
+  {id:'r14', vehId:'v1', cliId:'c11', dateDepart:'2026-08-01', kmDepart:19232, dateRetour:null, kmRetour:null, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:4000},
+  {id:'r15', vehId:'v2', cliId:'c11', dateDepart:'2026-08-02', kmDepart:124642, dateRetour:null, kmRetour:null, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:2000},
+];
+
+function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function nextNumber(arr){ return arr.reduce((m,x)=>Math.max(m, x.numero||0), 0) + 1; }
+function backfillNumbers(arr){
+  let max = arr.reduce((m,x)=>Math.max(m, x.numero||0), 0);
+  let changed = false;
+  arr.forEach(x=>{ if(!x.numero){ max += 1; x.numero = max; changed = true; } });
+  return changed;
+}
+function fmtNum(prefix, n){ return prefix + String(n||0).padStart(4,'0'); }
+function fmtDA(n){ return (Math.round(n||0)).toLocaleString('fr-FR') + ' DA'; }
+function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------- SAUVEGARDE / RESTAURATION (fichier JSON) ---------- */
+function exportBackup(){
+  const backup = {
+    app: 'CARLIZEN RENT CAR — Gestion Location',
+    exportedAt: new Date().toISOString(),
+    fleet, clients, rentals, agence,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `sauvegarde_${(agence.nom||'agence').toLowerCase()}_${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  localStorage.setItem(STORAGE_PREFIX+'lastBackup', new Date().toLocaleString('fr-FR'));
+  updateLastBackupInfo();
+  toast('Sauvegarde téléchargée');
+}
+function importBackup(event){
+  if(!requireAdmin()){ event.target.value=''; return; }
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!confirm('Restaurer cette sauvegarde va remplacer toutes les données actuelles (flotte, clients, locations, en-tête). Continuer ?')){
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data.fleet || !data.clients || !data.rentals){ toast('Fichier de sauvegarde invalide'); return; }
+      fleet = data.fleet; clients = data.clients; rentals = data.rentals;
+      if(data.agence) agence = data.agence;
+      await saveAll();
+      document.getElementById('ag_nom').value = agence.nom||'';
+      document.getElementById('ag_nif').value = agence.nif||'';
+      document.getElementById('ag_rc').value = agence.rc||'';
+      document.getElementById('ag_adresse').value = agence.adresse||'';
+      document.getElementById('ag_tel').value = agence.tel||'';
+      updateLogoPreview();
+      renderAll();
+      toast('Sauvegarde restaurée avec succès');
+    }catch(e){
+      console.error(e);
+      toast('Erreur : fichier de sauvegarde illisible');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+function updateLastBackupInfo(){
+  const el = document.getElementById('lastBackupInfo');
+  if(!el) return;
+  const last = localStorage.getItem(STORAGE_PREFIX+'lastBackup');
+  el.textContent = last ? `Dernière sauvegarde téléchargée : ${last}` : 'Aucune sauvegarde téléchargée pour le moment — pense à en faire une.';
+}
+
+async function init(){
+  fleet = await loadKey('fleet', null);
+  clients = await loadKey('clients', null);
+  rentals = await loadKey('rentals', null);
+  const savedAgence = await loadKey('agence', null);
+  let seeded = false;
+  if(fleet===null){ fleet = SEED_FLEET.map(v=>({...v})); seeded = true; }
+  if(clients===null){ clients = SEED_CLIENTS.map((c,i)=>({...c, numero:i+1})); seeded = true; }
+  if(rentals===null){ rentals = SEED_RENTALS.map((r,i)=>({...r, numero:i+1})); seeded = true; }
+  if(savedAgence){ agence = savedAgence; } else { seeded = true; }
+  const backfilled = backfillNumbers(clients) | backfillNumbers(rentals);
+  if(seeded || backfilled){ await saveAll(); }
+  document.getElementById('ct_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ag_nom').value = agence.nom||'';
+  document.getElementById('ag_nif').value = agence.nif||'';
+  document.getElementById('ag_rc').value = agence.rc||'';
+  document.getElementById('ag_adresse').value = agence.adresse||'';
+  document.getElementById('ag_tel').value = agence.tel||'';
+  updateLogoPreview();
+  updateLastBackupInfo();
+  renderAll();
+}
+async function saveAll(){
+  await Promise.all([saveKey('fleet', fleet), saveKey('clients', clients), saveKey('rentals', rentals), saveKey('agence', agence)]);
+}
+function saveAgence(){
+  if(!requireAdmin()) return;
+  agence = {
+    ...agence,
+    nom: document.getElementById('ag_nom').value.trim() || 'CARLIZEN',
+    nif: document.getElementById('ag_nif').value.trim(),
+    rc: document.getElementById('ag_rc').value.trim(),
+    adresse: document.getElementById('ag_adresse').value.trim(),
+    tel: document.getElementById('ag_tel').value.trim(),
+  };
+  saveKey('agence', agence);
+  toast('En-tête de l\'agence enregistré');
+}
+function updateLogoPreview(){
+  const wrap = document.getElementById('ag_logo_preview_wrap');
+  const img = document.getElementById('ag_logo_preview');
+  const topLogo = document.getElementById('topLogo');
+  if(agence.logo){
+    img.src = agence.logo; wrap.style.display='flex';
+    topLogo.src = agence.logo; topLogo.style.display='block';
+  } else {
+    wrap.style.display='none';
+    topLogo.style.display='none';
+  }
+}
+function handleLogoUpload(e){
+  if(!requireAdmin()) return;
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 1.5*1024*1024){ toast('Image trop lourde (max ~1,5 Mo)'); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    agence.logo = reader.result;
+    saveKey('agence', agence);
+    updateLogoPreview();
+    toast('Logo enregistré');
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo(){
+  if(!requireAdmin()) return;
+  agence.logo = '';
+  saveKey('agence', agence);
+  updateLogoPreview();
+  document.getElementById('ag_logo').value = '';
+  toast('Logo retiré');
+}
+
+/* ---------- COMPUTATION ---------- */
+function daysBetween(a,b){
+  if(!a) return 1;
+  if(!b) return 1;
+  const d1=new Date(a), d2=new Date(b);
+  const diff = Math.round((d2-d1)/86400000);
+  return Math.max(diff,1);
+}
+function computeRental(r){
+  const veh = fleet.find(v=>v.id===r.vehId) || {prixJour:r.prixJour, kmInclus:r.kmInclusJour, kmAdd:r.prixKmAdd, nom:'—', immat:'—'};
+  const cli = clients.find(c=>c.id===r.cliId) || {nom:'—'};
+  const nbrJours = daysBetween(r.dateDepart, r.dateRetour);
+  const kmParcourus = (r.kmRetour!=null && r.kmRetour!=='') ? (r.kmRetour - r.kmDepart) : null;
+  const kmInclusTotal = nbrJours * (r.kmInclusJour ?? veh.kmInclus);
+  const kmAdditionnel = kmParcourus!=null ? Math.max(0, kmParcourus - kmInclusTotal) : 0;
+  const total = nbrJours * r.prixJour + kmAdditionnel * r.prixKmAdd;
+  const totalNet = total - (r.remise||0);
+  let status = 'ongoing';
+  if(r.dateRetour && r.kmRetour!=null && r.kmRetour!==''){
+    status = kmAdditionnel>0 ? 'overrun' : 'done';
+  }
+  return {veh, cli, nbrJours, kmParcourus, kmInclusTotal, kmAdditionnel, total, totalNet, status};
+}
+
+/* ---------- RENDER: DASHBOARD ---------- */
+function renderDashboard(){
+  const computed = rentals.map(r=>({r, c:computeRental(r)}));
+  const totalLoc = rentals.length;
+  const enCours = computed.filter(x=>x.c.status==='ongoing').length;
+  const kmAddTotal = computed.reduce((s,x)=>s+x.c.kmAdditionnel,0);
+  const caTotal = computed.reduce((s,x)=>s+x.c.total,0);
+  const remiseTotal = computed.reduce((s,x)=>s+(x.r.remise||0),0);
+  const caNet = caTotal - remiseTotal;
+  const vehDispo = fleet.filter(v=>v.disponible).length;
+  const vehIndispo = fleet.length - vehDispo;
+
+  const grid = document.getElementById('kpiGrid');
+  grid.innerHTML = `
+    <div class="kpi"><div class="label">Total locations</div><div class="value">${totalLoc}</div></div>
+    <div class="kpi warn"><div class="label">En cours</div><div class="value" style="color:var(--accent)">${enCours}</div></div>
+    <div class="kpi"><div class="label">Km additionnel facturé</div><div class="value">${kmAddTotal.toLocaleString('fr-FR')}</div></div>
+    <div class="kpi accent"><div class="label">Chiffre d'affaires (DA)</div><div class="value">${caTotal.toLocaleString('fr-FR')}</div></div>
+    <div class="kpi success"><div class="label">Véhicules disponibles</div><div class="value">${vehDispo}</div></div>
+    <div class="kpi danger"><div class="label">Véhicules indisponibles</div><div class="value">${vehIndispo}</div></div>
+    <div class="kpi"><div class="label">Remises accordées (DA)</div><div class="value">${remiseTotal.toLocaleString('fr-FR')}</div></div>
+    <div class="kpi accent"><div class="label">CA net après remises (DA)</div><div class="value">${caNet.toLocaleString('fr-FR')}</div></div>
+  `;
+
+  const ongoing = computed.filter(x=>x.c.status==='ongoing');
+  const box = document.getElementById('ongoingTable');
+  if(ongoing.length===0){ box.innerHTML = '<div class="empty">Aucune location en cours.</div>'; return; }
+  box.innerHTML = `<table><thead><tr><th>Véhicule</th><th>Client</th><th>Départ</th><th>Km départ</th></tr></thead><tbody>
+    ${ongoing.map(x=>`<tr><td>${x.c.veh.nom}</td><td>${x.c.cli.nom}</td><td class="mono">${fmtDate(x.r.dateDepart)}</td><td class="num">${x.r.kmDepart}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ---------- EXPORT COMPTABILITÉ ---------- */
+function exportComptabilite(){
+  if(typeof XLSX === 'undefined'){ toast('Bibliothèque Excel indisponible — vérifier la connexion internet'); return; }
+  const computed = rentals.map(r=>({r, c:computeRental(r)}));
+  const statusLabel = {ongoing:'En cours', overrun:'Dépassement', done:'Terminée'};
+
+  const rows = [...computed].sort((a,b)=> new Date(a.r.dateDepart) - new Date(b.r.dateDepart)).map(({r,c})=>({
+    'N° Contrat': fmtNum('CT-',r.numero),
+    'N° Client': fmtNum('CL-',c.cli.numero),
+    'Véhicule': c.veh.nom,
+    'Immatriculation': c.veh.immat,
+    'Client': c.cli.nom,
+    'Téléphone': c.cli.tel||'',
+    'Date départ': fmtDate(r.dateDepart),
+    'Km départ': r.kmDepart,
+    'Date retour': fmtDate(r.dateRetour),
+    'Km retour': r.kmRetour ?? '',
+    'Nbr jours': c.nbrJours,
+    'Km parcourus': c.kmParcourus ?? '',
+    'Km inclus': c.kmInclusTotal,
+    'Km additionnel': c.kmAdditionnel,
+    'Prix / jour (DA)': r.prixJour,
+    'Total à payer (DA)': c.total,
+    'Remise client (DA)': r.remise||0,
+    'Total net à payer (DA)': c.totalNet,
+    'Statut': statusLabel[c.status],
+  }));
+
+  const totalLoc = rentals.length;
+  const enCours = computed.filter(x=>x.c.status==='ongoing').length;
+  const kmAddTotal = computed.reduce((s,x)=>s+x.c.kmAdditionnel,0);
+  const caTotal = computed.reduce((s,x)=>s+x.c.total,0);
+  const remiseTotal = computed.reduce((s,x)=>s+(x.r.remise||0),0);
+  const caNet = caTotal - remiseTotal;
+
+  const parClient = {};
+  computed.forEach(({r,c})=>{
+    parClient[c.cli.nom] = parClient[c.cli.nom] || {locations:0, total:0, remise:0, net:0};
+    parClient[c.cli.nom].locations += 1;
+    parClient[c.cli.nom].total += c.total;
+    parClient[c.cli.nom].remise += (r.remise||0);
+    parClient[c.cli.nom].net += c.totalNet;
+  });
+  const clientRows = Object.entries(parClient).map(([nom,v])=>({
+    'Client': nom, 'Nombre de locations': v.locations, 'Total facturé (DA)': v.total, 'Remises (DA)': v.remise, 'Net encaissé (DA)': v.net
+  }));
+
+  const parVehicule = {};
+  computed.forEach(({r,c})=>{
+    parVehicule[c.veh.nom] = parVehicule[c.veh.nom] || {locations:0, total:0, net:0, kmAdd:0};
+    parVehicule[c.veh.nom].locations += 1;
+    parVehicule[c.veh.nom].total += c.total;
+    parVehicule[c.veh.nom].net += c.totalNet;
+    parVehicule[c.veh.nom].kmAdd += c.kmAdditionnel;
+  });
+  const vehiculeRows = Object.entries(parVehicule).map(([nom,v])=>({
+    'Véhicule': nom, 'Nombre de locations': v.locations, 'Total facturé (DA)': v.total, 'Net encaissé (DA)': v.net, 'Km additionnel facturé': v.kmAdd
+  }));
+
+  const summaryRows = [
+    {'Indicateur':'Nombre total de locations', 'Valeur': totalLoc},
+    {'Indicateur':'Locations en cours', 'Valeur': enCours},
+    {'Indicateur':'Km additionnel total facturé', 'Valeur': kmAddTotal},
+    {'Indicateur':"Chiffre d'affaires total (DA)", 'Valeur': caTotal},
+    {'Indicateur':'Remises totales accordées (DA)', 'Valeur': remiseTotal},
+    {'Indicateur':"Chiffre d'affaires net (DA)", 'Valeur': caNet},
+    {'Indicateur':"Date d'extraction", 'Valeur': fmtDate(new Date().toISOString().slice(0,10))},
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'RESUME');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'LOCATIONS');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientRows), 'PAR CLIENT');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(vehiculeRows), 'PAR VEHICULE');
+
+  const stamp = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `comptabilite_${agence.nom||'agence'}_${stamp}.xlsx`);
+  toast('Comptabilité extraite');
+}
+
+/* ---------- RENDER: FLOTTE ---------- */
+function renderFleet(){
+  const sel = document.getElementById('f_vehicule');
+  sel.innerHTML = fleet.map(v=>`<option value="${v.id}">${v.nom} — ${v.immat}${v.disponible?'':' (indisponible)'}</option>`).join('');
+  updateVehiculePreview();
+
+  const box = document.getElementById('fleetTable');
+  if(fleet.length===0){ box.innerHTML='<div class="empty">Aucun véhicule.</div>'; return; }
+  box.innerHTML = `<table><thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Prix/jour</th><th>Km inclus</th><th>Km additionnel</th><th>Disponible</th><th></th></tr></thead><tbody>
+  ${fleet.map(v=>`<tr>
+    <td>${v.nom}</td>
+    <td class="mono">${v.immat}</td>
+    <td class="num">${fmtDA(v.prixJour)}</td>
+    <td class="num">${v.kmInclus}</td>
+    <td class="num">${fmtDA(v.kmAdd)}</td>
+    <td><span class="tag ${v.disponible?'ok':'bad'}">${v.disponible?'OUI':'NON'}</span></td>
+    <td class="row-actions">
+      ${isAdmin() ? `<button class="btn small ghost" onclick="toggleDispo('${v.id}')">Basculer</button><button class="btn small danger" onclick="deleteVehicule('${v.id}')">Suppr.</button>` : '—'}
+    </td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+function toggleDispo(id){ if(!requireAdmin()) return; const v=fleet.find(x=>x.id===id); v.disponible=!v.disponible; saveAll(); renderAll(); }
+function deleteVehicule(id){ if(!requireAdmin()) return; if(!confirm('Supprimer ce véhicule ?')) return; fleet=fleet.filter(v=>v.id!==id); saveAll(); renderAll(); }
+function addVehicule(){
+  if(!requireAdmin()) return;
+  const nom=document.getElementById('v_nom').value.trim();
+  const immat=document.getElementById('v_immat').value.trim();
+  const prix=parseFloat(document.getElementById('v_prix').value)||0;
+  const kminclus=parseFloat(document.getElementById('v_kminclus').value)||350;
+  const kmadd=parseFloat(document.getElementById('v_kmadd').value)||20;
+  if(!nom){ toast('Indiquer le nom du véhicule'); return; }
+  fleet.push({id:uid('v'), nom, immat, prixJour:prix, kmInclus:kminclus, kmAdd:kmadd, disponible:true});
+  ['v_nom','v_immat','v_prix'].forEach(id=>document.getElementById(id).value='');
+  saveAll(); renderAll(); toast('Véhicule ajouté');
+}
+
+/* ---------- RENDER: CLIENTS ---------- */
+function renderClients(){
+  const sel = document.getElementById('f_client');
+  sel.innerHTML = clients.map(c=>`<option value="${c.id}">${fmtNum('CL-',c.numero)} — ${c.nom}</option>`).join('');
+  updateClientPreview();
+
+  const box = document.getElementById('clientsTable');
+  if(clients.length===0){ box.innerHTML='<div class="empty">Aucun client.</div>'; return; }
+  box.innerHTML = `<table><thead><tr><th>N°</th><th>Client</th><th>Téléphone</th><th>Remise</th><th>Permis</th><th></th></tr></thead><tbody>
+  ${[...clients].sort((a,b)=>(b.numero||0)-(a.numero||0)).map(c=>`<tr>
+    <td class="mono">${fmtNum('CL-',c.numero)}</td>
+    <td>${c.nom}</td>
+    <td class="mono">${c.tel||'—'}</td>
+    <td class="num">${fmtDA(c.remise)}</td>
+    <td class="mono">${c.permis||'—'}</td>
+    <td class="row-actions">${isAdmin() ? `<button class="btn small danger" onclick="deleteClient('${c.id}')">Suppr.</button>` : '—'}</td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+function deleteClient(id){ if(!requireAdmin()) return; if(!confirm('Supprimer ce client ?')) return; clients=clients.filter(c=>c.id!==id); saveAll(); renderAll(); }
+function addClient(){
+  if(!requireAdmin()) return;
+  const nom=document.getElementById('c_nom').value.trim();
+  if(!nom){ toast('Indiquer le nom du client'); return; }
+  clients.push({
+    id:uid('c'), numero:nextNumber(clients), nom,
+    tel:document.getElementById('c_tel').value.trim(),
+    remise:parseFloat(document.getElementById('c_remise').value)||0,
+    obs:document.getElementById('c_obs').value.trim(),
+    naissance:document.getElementById('c_naissance').value.trim(),
+    adresse:document.getElementById('c_adresse').value.trim(),
+    permis:document.getElementById('c_permis').value.trim(),
+    delivre:document.getElementById('c_delivre').value.trim(),
+  });
+  ['c_nom','c_tel','c_remise','c_obs','c_naissance','c_adresse','c_permis','c_delivre'].forEach(id=>document.getElementById(id).value='');
+  saveAll(); renderAll(); toast('Client ajouté');
+}
+
+/* ---------- QUICK ADD CLIENT ---------- */
+let quickClientTarget = null;
+function openQuickClient(targetSelectId){
+  if(!requireAdmin()) return;
+  quickClientTarget = targetSelectId;
+  ['qc_nom','qc_tel','qc_remise','qc_permis','qc_naissance','qc_adresse','qc_delivre','qc_obs'].forEach(id=>document.getElementById(id).value = id==='qc_remise' ? 0 : '');
+  document.getElementById('quickClientOverlay').style.display = 'flex';
+  document.getElementById('qc_nom').focus();
+}
+function closeQuickClient(){
+  document.getElementById('quickClientOverlay').style.display = 'none';
+  quickClientTarget = null;
+}
+function saveQuickClient(){
+  if(!requireAdmin()) return;
+  const nom = document.getElementById('qc_nom').value.trim();
+  if(!nom){ toast('Indiquer le nom du client'); return; }
+  const newClient = {
+    id:uid('c'), numero:nextNumber(clients), nom,
+    tel:document.getElementById('qc_tel').value.trim(),
+    remise:parseFloat(document.getElementById('qc_remise').value)||0,
+    obs:document.getElementById('qc_obs').value.trim(),
+    naissance:document.getElementById('qc_naissance').value.trim(),
+    adresse:document.getElementById('qc_adresse').value.trim(),
+    permis:document.getElementById('qc_permis').value.trim(),
+    delivre:document.getElementById('qc_delivre').value.trim(),
+  };
+  clients.push(newClient);
+  saveAll();
+  renderAll();
+  if(quickClientTarget === 'f_client'){
+    document.getElementById('f_client').value = newClient.id;
+    updateClientPreview();
+  }
+  closeQuickClient();
+  toast('Client ajouté — sélectionnez-le pour continuer');
+}
+
+/* ---------- FORM: NOUVELLE LOCATION ---------- */
+function updateVehiculePreview(){
+  const v = fleet.find(x=>x.id===document.getElementById('f_vehicule').value);
+  const box = document.getElementById('prevVehicule');
+  if(!v){ box.innerHTML='—'; return; }
+  box.innerHTML = `Prix/jour : <b>${fmtDA(v.prixJour)}</b> · Km inclus/jour : <b>${v.kmInclus}</b><br>Disponibilité : <b>${v.disponible?'OUI':'NON — véhicule actuellement loué'}</b>`;
+  updateCalcPreview();
+}
+function updateClientPreview(){
+  const c = clients.find(x=>x.id===document.getElementById('f_client').value);
+  const box = document.getElementById('prevClient');
+  if(!c){ box.innerHTML='—'; return; }
+  box.innerHTML = `Remise habituelle : <b>${fmtDA(c.remise)}</b>${c.tel?` · Tél : <b>${c.tel}</b>`:''}`;
+  document.getElementById('f_remise').value = c.remise||0;
+  updateCalcPreview();
+}
+function updateCalcPreview(){
+  const v = fleet.find(x=>x.id===document.getElementById('f_vehicule').value);
+  if(!v) return;
+  const dep=document.getElementById('f_dateDepart').value;
+  const ret=document.getElementById('f_dateRetour').value;
+  const kd=parseFloat(document.getElementById('f_kmDepart').value);
+  const kr=parseFloat(document.getElementById('f_kmRetour').value);
+  const remise=parseFloat(document.getElementById('f_remise').value)||0;
+  const jours = daysBetween(dep||null, ret||null);
+  const kmInclusTotal = jours*v.kmInclus;
+  let kmParcourus=null, kmAdd=0;
+  if(!isNaN(kr) && !isNaN(kd)){ kmParcourus = kr-kd; kmAdd=Math.max(0,kmParcourus-kmInclusTotal); }
+  const total = jours*v.prixJour + kmAdd*v.kmAdd;
+  const net = total-remise;
+  document.getElementById('prevCalc').innerHTML =
+    `Aperçu : <b>${jours}</b> jour(s) · km inclus <b>${kmInclusTotal}</b>` +
+    (kmParcourus!=null? ` · km parcourus <b>${kmParcourus}</b> · km additionnel <b>${kmAdd}</b>`:' · km retour non saisi (location en cours)') +
+    ` · Total <b>${fmtDA(total)}</b> · Remise <b>${fmtDA(remise)}</b> · <b style="color:var(--accent)">Net à payer ${fmtDA(net)}</b>`;
+}
+['f_vehicule','f_dateDepart','f_dateRetour','f_kmDepart','f_kmRetour','f_remise'].forEach(id=>{
+  document.addEventListener('input', e=>{ if(e.target.id===id) updateCalcPreview(); });
+  document.addEventListener('change', e=>{ if(e.target.id===id) updateCalcPreview(); });
+});
+
+function addRental(){
+  if(!requireAdmin()) return;
+  const vehId=document.getElementById('f_vehicule').value;
+  const cliId=document.getElementById('f_client').value;
+  const dateDepart=document.getElementById('f_dateDepart').value;
+  const kmDepart=parseFloat(document.getElementById('f_kmDepart').value);
+  const dateRetour=document.getElementById('f_dateRetour').value || null;
+  const kmRetourRaw=document.getElementById('f_kmRetour').value;
+  const kmRetour = kmRetourRaw===''? null : parseFloat(kmRetourRaw);
+  const remise=parseFloat(document.getElementById('f_remise').value)||0;
+  const v = fleet.find(x=>x.id===vehId);
+  if(!vehId || !cliId){ toast('Choisir un véhicule et un client'); return; }
+  if(!dateDepart || isNaN(kmDepart)){ toast('Renseigner la date et le km de départ'); return; }
+  rentals.push({id:uid('r'), numero:nextNumber(rentals), vehId, cliId, dateDepart, kmDepart, dateRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise});
+  v.disponible = !!(dateRetour && kmRetour!=null);
+  ['f_dateDepart','f_kmDepart','f_dateRetour','f_kmRetour'].forEach(id=>document.getElementById(id).value='');
+  saveAll(); renderAll(); toast('Location ajoutée');
+}
+
+/* ---------- RENDER: LOCATIONS TABLE ---------- */
+function renderRentals(){
+  const box = document.getElementById('rentalsTable');
+  if(rentals.length===0){ box.innerHTML='<div class="empty">Aucune location enregistrée.</div>'; renderContractSelect(); return; }
+  const sorted = [...rentals].sort((a,b)=> new Date(b.dateDepart) - new Date(a.dateDepart));
+  box.innerHTML = `<table><thead><tr>
+    <th>N° Contrat</th><th>Véhicule</th><th>Client</th><th>Départ</th><th>Retour</th><th>Jours</th><th>Km add.</th><th>Total</th><th>Net</th><th>Statut</th><th></th>
+  </tr></thead><tbody>
+  ${sorted.map(r=>{
+    const c = computeRental(r);
+    const tag = c.status==='ongoing' ? '<span class="tag warn">En cours</span>' : c.status==='overrun' ? '<span class="tag bad">Dépassement</span>' : '<span class="tag ok">Terminée</span>';
+    const retourBtn = (isAdmin() && c.status==='ongoing') ? `<button class="btn small ghost" onclick="markReturned('${r.id}')">Marquer rendu</button>` : '';
+    const deleteBtn = isAdmin() ? `<button class="btn small danger" onclick="deleteRental('${r.id}')">Suppr.</button>` : '';
+    return `<tr>
+      <td class="mono">${fmtNum('CT-',r.numero)}</td>
+      <td>${c.veh.nom}</td>
+      <td>${c.cli.nom}</td>
+      <td class="mono">${fmtDate(r.dateDepart)}</td>
+      <td class="mono">${fmtDate(r.dateRetour)}</td>
+      <td class="num">${c.nbrJours}</td>
+      <td class="num">${c.kmAdditionnel}</td>
+      <td class="num">${fmtDA(c.total)}</td>
+      <td class="num">${fmtDA(c.totalNet)}</td>
+      <td>${tag}</td>
+      <td class="row-actions">${retourBtn}<button class="btn small ghost" onclick="goToContract('${r.id}')">🖶 Contrat</button>${deleteBtn}</td>
+    </tr>`;
+  }).join('')}
+  </tbody></table>`;
+
+  renderContractSelect();
+}
+function renderContractSelect(filterText){
+  const ctSel = document.getElementById('ct_rental');
+  if(!ctSel) return;
+  const q = (filterText||'').trim().toLowerCase();
+  const sorted = [...rentals].sort((a,b)=> new Date(b.dateDepart) - new Date(a.dateDepart));
+  const filtered = sorted.filter(r=>{
+    if(!q) return true;
+    const c = computeRental(r);
+    const haystack = [
+      fmtNum('CT-',r.numero), r.numero,
+      fmtNum('CL-',c.cli.numero), c.cli.numero,
+      c.cli.nom, c.veh.nom, c.veh.immat,
+      fmtDate(r.dateDepart), fmtDate(r.dateRetour)
+    ].join(' ').toLowerCase();
+    return haystack.includes(q);
+  });
+  if(filtered.length===0){
+    ctSel.innerHTML = '<option value="">Aucun résultat</option>';
+    return;
+  }
+  ctSel.innerHTML = filtered.map(r=>{
+    const c = computeRental(r);
+    return `<option value="${r.id}">${fmtNum('CT-',r.numero)} — ${c.veh.nom} — ${fmtNum('CL-',c.cli.numero)} ${c.cli.nom} — ${fmtDate(r.dateDepart)}</option>`;
+  }).join('');
+}
+function searchContracts(){
+  renderContractSelect(document.getElementById('ct_search').value);
+  const ctSel = document.getElementById('ct_rental');
+  if(ctSel.value) renderContract();
+}
+function goToContract(rentalId){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('nav.tabs button[data-view="contrat"]').classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-contrat').classList.add('active');
+  document.getElementById('ct_search').value = '';
+  renderContractSelect();
+  document.getElementById('ct_rental').value = rentalId;
+  renderContract();
+}
+function deleteRental(id){ if(!requireAdmin()) return; if(!confirm('Supprimer cette location ?')) return; rentals=rentals.filter(r=>r.id!==id); saveAll(); renderAll(); }
+function markReturned(id){
+  if(!requireAdmin()) return;
+  const r = rentals.find(x=>x.id===id);
+  const dr = prompt('Date de retour (AAAA-MM-JJ) :', new Date().toISOString().slice(0,10));
+  if(!dr) return;
+  const kr = prompt('Kilométrage de retour :');
+  if(kr===null || kr==='') return;
+  r.dateRetour = dr; r.kmRetour = parseFloat(kr);
+  const v = fleet.find(x=>x.id===r.vehId);
+  if(v) v.disponible = true;
+  saveAll(); renderAll(); toast('Location clôturée');
+}
+
+/* ---------- CONTRAT ---------- */
+const ANNEXE_ARTICLES = [
+  {t:"Article 01 : Dispositions générales", p:["Le présent contrat définit les conditions de location et d'utilisation du véhicule touristique."]},
+  {t:"Article 02 : Objet du contrat", p:["Le présent contrat a pour objet la location d'un véhicule, dont les caractéristiques sont précisées dans les documents contractuels signés par les deux parties."]},
+  {t:"Article 03 : Conditions de location", p:["Toute personne souhaitant louer un véhicule doit remplir les conditions suivantes :"], l:["Être âgée de plus de 25 ans.","Être titulaire d'un permis de conduire valide.","Présenter une pièce d'identité officielle en cours de validité (carte nationale ou passeport).","Disposer des moyens financiers nécessaires pour payer la location et le dépôt de garantie."]},
+  {t:"Article 04 : Obligations et responsabilité du locataire", l:["Seul le locataire signataire est autorisé à conduire le véhicule.","En cas d'accident, le locataire prend en charge les frais de réparation ainsi que les jours d'immobilisation du véhicule (considérés comme jours de location).","En cas de vol ou de perte, le locataire doit rembourser la valeur réelle du véhicule sur la base de la facture d'achat, et fournir une déclaration officielle (accident ou vol).","Le locataire doit fournir des informations exactes lors de la signature (identité, permis, etc.).","Il est strictement interdit de conduire en état d'ivresse ou sous l'effet de substances interdites.","Le locataire supporte toutes les conséquences financières en cas de conduite en état d'ivresse.","En cas d'accident causé à un tiers (personne ou animal), la responsabilité incombe au locataire.","Le locataire est responsable de tous les dommages subis par le véhicule.","Il est interdit de laisser les clés dans le véhicule lorsqu'il est stationné sans surveillance."]},
+  {t:"Article 05 : Conditions d'utilisation du véhicule", p:["Il est interdit d'utiliser le véhicule pour :"], l:["Transporter des personnes à titre rémunéré.","Sous-louer ou prêter le véhicule à un tiers.","Participer à des courses ou compétitions.","Commettre des actes illégaux.","Transporter des marchandises interdites.","Utiliser le véhicule en dehors du territoire national sans autorisation.","Utiliser le véhicule de manière abusive ou négligente."]},
+  {t:"Article 06 : Durée de location", l:["La durée de location est calculée par tranches de 24 heures non fractionnables.","Tout retard entraîne la facturation d'heures ou de journées supplémentaires.","Si le locataire dépasse la durée sans accord, le loueur peut considérer le véhicule comme détourné.","Une pénalité peut être appliquée selon la distance parcourue : 50,00 DA par km.","En cas de non-restitution, une plainte peut être déposée auprès des autorités compétentes."]},
+  {t:"Article 07 : Modalités de paiement et dépôt de garantie", l:["Le locataire doit payer à l'avance les frais de location.","Un dépôt de garantie est exigé avant la remise du véhicule.","Ce dépôt est restitué dans un délai de 24 heures après restitution, après vérification du véhicule.","Le dépôt peut être utilisé pour couvrir les frais non payés ou les dommages.","Le dépôt peut être effectué sous forme de chèque signé au nom du propriétaire."]},
+  {t:"Article 08 : État du véhicule", l:["Un état détaillé du véhicule est établi au moment de la remise.","Le locataire doit signaler toute anomalie.","Le document mentionne la date, l'heure et le kilométrage.","Toute dégradation non mentionnée sera facturée au locataire lors du retour."]},
+  {t:"Article 09 : Entretien du véhicule", l:["Le locataire doit maintenir le véhicule en bon état.","Il doit vérifier les niveaux (huile, eau, etc.).","Il supporte les frais de carburant.","Si le véhicule est rendu avec moins de carburant, les frais de remplissage seront facturés.","Les frais de lavage peuvent être facturés si le véhicule est rendu sale.","Le locataire doit payer toutes les amendes et taxes liées à l'utilisation.","Aucune réparation ne peut être effectuée sans accord du loueur."]},
+  {t:"Article 10 : Restitution du véhicule", l:["Le véhicule doit être restitué avec les clés et les documents.","Il doit être rendu à la date et à l'heure convenues.","Le locataire doit restituer le véhicule propre et avec le réservoir au même niveau.","En cas de retard après la fermeture de l'agence, la responsabilité reste engagée jusqu'à remise officielle."]},
+  {t:"Article 11 : Durée et validité du contrat", p:["Le contrat entre en vigueur à la signature et reste valable jusqu'à restitution du véhicule."]},
+  {t:"Article 12 : Résiliation et litiges", p:["Le contrat peut être résilié dans les cas suivants :"], l:["Non-respect des obligations contractuelles.","Utilisation illégale du véhicule.","Sous-location ou cession à un tiers.","Dépassement de la durée de location."]},
+  {t:"Article 13 : Pénalités de retard", p:["Tout retard est facturé à hauteur de 1000 DA par heure."]},
+  {t:"Article 14 : Réparations", p:["Tout dommage ou retouche sur le véhicule est à la charge du locataire."]},
+  {t:"Article 15 : Responsabilité finale", p:["Le locataire reconnaît avoir reçu le véhicule en bon état. Il s'engage à le restituer dans le même état. Aucune réclamation ne sera acceptée après signature."]},
+];
+
+function letterheadHTML(){
+  const meta = [
+    agence.nif ? `NIF : ${agence.nif}` : null,
+    agence.nis ? `NIS : ${agence.nis}` : null,
+    agence.rc ? `RC : ${agence.rc}` : null,
+    agence.adresse ? `Adresse : ${agence.adresse}` : null,
+    agence.tel ? `Tél : ${agence.tel}` : null,
+  ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+  const logoImg = agence.logo ? `<img src="${agence.logo}" style="max-height:42px;max-width:110px;position:absolute;left:0;top:0;">` : '';
+  return `
+    <div class="letterhead" style="position:relative;">
+      ${logoImg}
+      <div class="lh-top">Agence de location de voiture</div>
+      <div class="lh-sarl">SARL ${agence.nom||'CARLIZEN'}</div>
+      ${meta ? `<div class="lh-meta">${meta}</div>` : ''}
+    </div>`;
+}
+function contractHTML(r, lieu, dateContrat){
+  const c = computeRental(r);
+  const cli = clients.find(x=>x.id===r.cliId) || {};
+  const veh = fleet.find(x=>x.id===r.vehId) || {};
+  return `
+  <div class="contract-doc">
+    ${letterheadHTML()}
+    <h2>Contrat de location de voiture</h2>
+    <p style="text-align:center;margin:-10px 0 14px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px;">Contrat N° ${fmtNum('CT-',r.numero)} &nbsp;·&nbsp; Fiche client N° ${fmtNum('CL-',cli.numero)}</p>
+    <div class="two-col">
+      <div class="cblock">
+        <h3>Véhicule</h3>
+        <table><tbody>
+          <tr><td style="width:52%">Marque / modèle</td><td class="mono">${veh.nom||'—'}</td></tr>
+          <tr><td>Immatriculation</td><td class="mono">${veh.immat||'—'}</td></tr>
+          <tr><td>Km à ce jour</td><td class="mono">${r.kmDepart} KLM</td></tr>
+          <tr><td>Km inclus / jour</td><td class="mono">${r.kmInclusJour}</td></tr>
+          <tr><td>Prix km additionnel</td><td class="mono">${fmtDA(r.prixKmAdd)}</td></tr>
+        </tbody></table>
+      </div>
+      <div class="cblock">
+        <h3>Locataire — Fiche N° ${fmtNum('CL-',cli.numero)}</h3>
+        <table><tbody>
+          <tr><td style="width:52%">Nom et prénom</td><td>${cli.nom||'—'}</td></tr>
+          <tr><td>Naissance</td><td>${cli.naissance||'—'}</td></tr>
+          <tr><td>Adresse</td><td>${cli.adresse||'—'}</td></tr>
+          <tr><td>Téléphone</td><td class="mono">${cli.tel||'—'}</td></tr>
+          <tr><td>Permis N°</td><td class="mono">${cli.permis||'—'}</td></tr>
+          <tr><td>Délivré par</td><td>${cli.delivre||'—'}</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="cblock">
+      <h3>Conditions de la location</h3>
+      <table><tbody>
+        <tr><td style="width:26%">Durée</td><td class="mono">${c.nbrJours} JR</td><td style="width:26%">Départ</td><td class="mono">${fmtDate(r.dateDepart)}</td></tr>
+        <tr><td>Retour prévu</td><td class="mono">${fmtDate(r.dateRetour)}</td><td>Prix / jour</td><td class="mono">${fmtDA(r.prixJour)}</td></tr>
+        <tr><td>Remise</td><td class="mono">${fmtDA(r.remise)}</td><td><b>Net à payer</b></td><td class="mono"><b>${fmtDA(c.totalNet)}</b></td></tr>
+      </tbody></table>
+    </div>
+    <p class="nb">N.B : Le véhicule ne peut être conduit que par le détenteur du présent contrat.</p>
+    <div class="sign-area">
+      <p class="nb">Fait à ${lieu||'—'}, le ${fmtDate(dateContrat)}</p>
+      <div class="sign"><div>Locataire</div><div>La direction</div></div>
+    </div>
+  </div>
+  <div class="contract-doc page-break">
+    ${letterheadHTML()}
+    <div class="annexe-head">Annexe au contrat de location</div>
+    <div class="annexe annexe-cols">
+      ${ANNEXE_ARTICLES.map(a=>`
+        <div class="art">
+          <h3>${a.t}</h3>
+          ${a.p?a.p.map(p=>`<p>${p}</p>`).join(''):''}
+          ${a.l?`<ul>${a.l.map(li=>`<li>${li}</li>`).join('')}</ul>`:''}
+        </div>
+      `).join('')}
+    </div>
+    <p class="sign-line">Signature client :</p>
+  </div>`;
+}
+function renderContract(){
+  const id = document.getElementById('ct_rental').value;
+  const r = rentals.find(x=>x.id===id);
+  const lieu = document.getElementById('ct_lieu').value;
+  const dateContrat = document.getElementById('ct_date').value;
+  if(!r){ document.getElementById('contractPreview').innerHTML = '<div class="empty">Aucune location sélectionnée.</div>'; return; }
+  const html = contractHTML(r, lieu, dateContrat);
+  document.getElementById('contractPreview').innerHTML = html;
+  document.getElementById('contractPrint').innerHTML = html;
+}
+
+/* ---------- TABS ---------- */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-view]');
+  if(!btn) return;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+btn.dataset.view).classList.add('active');
+});
+document.getElementById('f_vehicule').addEventListener('change', updateVehiculePreview);
+document.getElementById('f_client').addEventListener('change', updateClientPreview);
+
+function renderAll(){
+  renderFleet();
+  renderClients();
+  renderRentals();
+  renderDashboard();
+  renderAccounts();
+}
+
+(async function boot(){
+  await loadAccounts();
+  if(checkExistingSession()){
+    showApp();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+})();
+</script>
+</body>
+</html>
