@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
     --bg:#14171c;
@@ -111,28 +112,27 @@
   #contractPrint{display:none;}
   .contract-select{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
   .contract-select .field{flex:1;min-width:220px;margin-bottom:0;}
-  .contract-doc{background:#f4f1ea;color:#1a1a1a;border-radius:10px;padding:16mm 18mm;font-family:'Inter',sans-serif;width:210mm;min-height:297mm;margin:0 auto 14px;box-sizing:border-box;font-size:13px;line-height:1.45;display:flex;flex-direction:column;}
+  .contract-doc{position:relative;background:#f4f1ea;color:#1a1a1a;border-radius:10px;padding:16mm 18mm;font-family:'Inter',sans-serif;width:210mm;min-height:297mm;margin:0 auto 14px;box-sizing:border-box;font-size:14.5px;font-weight:600;line-height:1.5;}
   .letterhead{text-align:center;border-bottom:2px solid #1a1a1a;padding-bottom:10px;margin-bottom:16px;}
-  .letterhead .lh-top{font-family:'Oswald',sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:1px;font-weight:600;}
-  .letterhead .lh-sarl{font-family:'Oswald',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:2px 0;}
-  .letterhead .lh-meta{font-size:11px;color:#444;font-family:'JetBrains Mono',monospace;margin-top:3px;}
-  .contract-doc h2{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:20px;margin:0 0 16px;}
+  .letterhead .lh-top{font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  .letterhead .lh-sarl{font-family:'Oswald',sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:2px 0;}
+  .letterhead .lh-meta{font-size:11.5px;color:#333;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:3px;}
+  .contract-doc h2{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:21px;font-weight:700;margin:0 0 16px;}
   .contract-doc table{margin-bottom:14px;width:100%;}
-  .contract-doc thead th{color:#555;border-color:#ccc;padding:6px 10px;font-size:11px;}
-  .contract-doc tbody td{border-color:#ccc;color:#222;padding:7px 10px;font-size:13px;}
+  .contract-doc thead th{color:#333;font-weight:700;border-color:#ccc;padding:6px 10px;font-size:12px;}
+  .contract-doc tbody td{border-color:#ccc;color:#111;font-weight:600;padding:8px 10px;font-size:14.5px;}
   .contract-doc .cblock{margin-bottom:16px;}
-  .contract-doc .cblock h3{font-family:'Oswald',sans-serif;font-size:13.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--accent-dim);padding-bottom:4px;margin-bottom:8px;}
+  .contract-doc .cblock h3{font-family:'Oswald',sans-serif;font-size:14.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--accent-dim);padding-bottom:4px;margin-bottom:8px;}
   .contract-doc .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
-  .contract-doc p.nb{font-size:11.5px;font-style:italic;margin:8px 0;}
-  .contract-doc .sign-area{margin-top:auto;min-height:100mm;display:flex;flex-direction:column;justify-content:flex-end;}
-  .contract-doc .sign-area p.nb{margin-top:0;}
-  .contract-doc .sign{display:flex;justify-content:space-between;margin-top:40px;font-size:13px;}
+  .contract-doc p.nb{font-size:12.5px;font-weight:600;font-style:italic;margin:8px 0;}
+  .contract-doc .sign-spacer{height:48mm;}
+  .contract-doc .sign{display:flex;justify-content:space-between;margin-top:40px;font-size:14px;font-weight:700;}
   .contract-doc .sign div{border-top:1px solid #999;padding-top:26px;width:42%;text-align:center;}
   .annexe-head{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:13px;margin:0 0 8px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;}
   .annexe-cols{column-count:2;column-gap:9mm;column-rule:1px solid #ccc;}
-  .annexe h3{font-family:'Oswald',sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.2px;margin:7px 0 2px;break-after:avoid;}
+  .annexe h3{font-family:'Oswald',sans-serif;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;margin:7px 0 2px;break-after:avoid;}
   .annexe .art{break-inside:avoid;margin-bottom:2px;}
-  .annexe p, .annexe li{font-size:8.2px;line-height:1.28;color:#222;}
+  .annexe p, .annexe li{font-size:8.2px;font-weight:400;line-height:1.28;color:#222;}
   .annexe p{margin:1px 0;}
   .annexe ul{margin:1px 0 3px 11px;padding:0;}
   .annexe .sign-line{margin-top:10px;font-size:9px;}
@@ -143,7 +143,7 @@
     body *{visibility:hidden;}
     #contractPrint, #contractPrint *{visibility:visible;}
     #contractPrint{display:block;position:absolute;top:0;left:0;width:100%;}
-    .contract-doc{border-radius:0;margin:0;width:210mm;height:297mm;min-height:297mm;}
+    .contract-doc{border-radius:0;margin:0;width:210mm;min-height:297mm;}
   }
 </style>
 </head>
@@ -158,10 +158,6 @@
     </div>
     <div class="field"><label>Identifiant</label><input id="login_user" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login_pass').focus()"></div>
     <div class="field"><label>Mot de passe</label><input type="password" id="login_pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="login_remember" checked style="width:auto;">
-      <label style="margin:0;text-transform:none;font-size:12.5px;color:var(--text-dim);">Rester connecté sur cet ordinateur</label>
-    </div>
     <button class="btn" style="width:100%" onclick="doLogin()">Se connecter</button>
     <p id="loginError" style="color:var(--danger);font-size:12.5px;margin-top:10px;text-align:center;display:none;">Identifiant ou mot de passe incorrect.</p>
   </div>
@@ -188,6 +184,7 @@
     </nav>
     <div style="display:flex;align-items:center;gap:10px;">
       <span id="whoami" class="sub" style="margin:0;"></span>
+      <button class="btn ghost small" onclick="refreshData()">🔄 Actualiser</button>
       <button class="btn ghost small" onclick="doLogout()">Déconnexion</button>
     </div>
   </div>
@@ -409,105 +406,59 @@
 </div>
 
 <script>
-/* ---------- STORAGE ---------- */
-/* Stockage hybride :
-   - Si l'app est ouverte dans Claude (artifact), les données sont sauvegardées
-     EN LIGNE sur ton compte Claude, gratuitement, accessibles depuis n'importe
-     quel appareil connecté au même compte (PC, téléphone...).
-   - Si le fichier est ouvert directement (double-clic, hors Claude), les
-     données sont sauvegardées localement dans ce navigateur.
-   Dans les deux cas, une copie locale est aussi gardée comme filet de sécurité,
-   et le bouton "Sauvegarde" permet d'exporter/importer un fichier de secours. */
-const STORAGE_PREFIX = 'carlizen_gestion_';
-const HAS_CLOUD = (typeof window!=='undefined' && window.storage && typeof window.storage.get==='function');
-async function loadKey(key, fallback){
-  if(HAS_CLOUD){
-    try{
-      const r = await window.storage.get(key, false);
-      if(r) return JSON.parse(r.value);
-    }catch(e){ /* pas encore de valeur en ligne, on retombe sur le local */ }
-  }
-  try{
-    const raw = localStorage.getItem(STORAGE_PREFIX + key);
-    return raw!==null ? JSON.parse(raw) : fallback;
-  }catch(e){ console.error('storage read error', key, e); return fallback; }
-}
-async function saveKey(key, value){
-  let ok = true;
-  if(HAS_CLOUD){
-    try{ await window.storage.set(key, JSON.stringify(value), false); }
-    catch(e){ console.error('cloud storage write error', key, e); ok = false; }
-  }
-  try{ localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value)); }
-  catch(e){ console.error('local storage write error', key, e); }
-  return ok;
-}
+/* ---------- SUPABASE : base de données + comptes en ligne ---------- */
+const SUPABASE_URL = 'https://znltbrnmnwvhpzzceksx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_shSGNhpN5H_7QFsopaivYw_Kq1N3E7N';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const EMAIL_DOMAIN = 'carlizen.dz';
+function toEmail(u){ u = (u||'').trim(); return u.includes('@') ? u : `${u}@${EMAIL_DOMAIN}`; }
 
-/* ---------- COMPTES / ACCÈS (3 comptes, 1 seul avec droit de modification) ---------- */
-let accounts = [];
 let currentUser = null;
-function simpleHash(str){
-  let h = 5381;
-  for(let i=0;i<str.length;i++){ h = ((h*33) ^ str.charCodeAt(i)) >>> 0; }
-  return h.toString(16);
-}
-const DEFAULT_ACCOUNTS = [
-  {username:'gerant', pass:'Carlizen2026', role:'admin', label:'Gérant — modification'},
-  {username:'employe1', pass:'Lecture2026a', role:'viewer', label:'Lecture seule 1'},
-  {username:'employe2', pass:'Lecture2026b', role:'viewer', label:'Lecture seule 2'},
-];
-async function loadAccounts(){
-  let saved = await loadKey('accounts', null);
-  if(!saved || !Array.isArray(saved) || saved.length!==3){
-    saved = DEFAULT_ACCOUNTS.map(a=>({username:a.username, passHash:simpleHash(a.pass), role:a.role, label:a.label}));
-    await saveKey('accounts', saved);
-  }
-  accounts = saved;
-}
-function findAccount(username){
-  return accounts.find(a=>a.username.toLowerCase()===String(username||'').trim().toLowerCase());
-}
 function isAdmin(){ return !!(currentUser && currentUser.role==='admin'); }
 function requireAdmin(){
   if(!isAdmin()){ toast('Accès en lecture seule — modification non autorisée'); return false; }
   return true;
 }
+
 async function doLogin(){
   const u = document.getElementById('login_user').value;
   const p = document.getElementById('login_pass').value;
-  const remember = document.getElementById('login_remember').checked;
-  const acc = findAccount(u);
   const err = document.getElementById('loginError');
-  if(!acc || acc.passHash !== simpleHash(p)){
+  err.style.display = 'none';
+  const {data, error} = await sb.auth.signInWithPassword({email: toEmail(u), password: p});
+  if(error || !data.user){
+    err.textContent = 'Identifiant ou mot de passe incorrect.';
     err.style.display = 'block';
     return;
   }
-  err.style.display = 'none';
-  currentUser = {username:acc.username, role:acc.role, label:acc.label};
-  const sessionData = JSON.stringify(currentUser);
-  if(remember){ localStorage.setItem(STORAGE_PREFIX+'session', sessionData); }
-  else{ sessionStorage.setItem(STORAGE_PREFIX+'session', sessionData); }
+  const ok = await loadProfile(data.user);
+  if(!ok){
+    err.textContent = "Compte non configuré (rôle manquant) — contacte l'administrateur.";
+    err.style.display = 'block';
+    await sb.auth.signOut();
+    return;
+  }
   showApp();
 }
-function doLogout(){
-  localStorage.removeItem(STORAGE_PREFIX+'session');
-  sessionStorage.removeItem(STORAGE_PREFIX+'session');
+async function loadProfile(user){
+  const {data, error} = await sb.from('profiles').select('role,label').eq('id', user.id).single();
+  if(error || !data) return false;
+  currentUser = {id:user.id, email:user.email, role:data.role, label:data.label||user.email};
+  return true;
+}
+async function doLogout(){
+  await sb.auth.signOut();
   location.reload();
 }
-function checkExistingSession(){
-  const raw = localStorage.getItem(STORAGE_PREFIX+'session') || sessionStorage.getItem(STORAGE_PREFIX+'session');
-  if(!raw) return false;
-  try{
-    const sess = JSON.parse(raw);
-    const acc = findAccount(sess.username);
-    if(acc){ currentUser = {username:acc.username, role:acc.role, label:acc.label}; return true; }
-  }catch(e){}
-  return false;
+async function checkExistingSession(){
+  const {data} = await sb.auth.getSession();
+  if(!data.session) return false;
+  return await loadProfile(data.session.user);
 }
 function showApp(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('whoami').textContent = `${currentUser.label||currentUser.username} · ${currentUser.role==='admin'?'Modification':'Lecture seule'}`;
+  document.getElementById('whoami').textContent = `${currentUser.label||currentUser.email} · ${currentUser.role==='admin'?'Modification':'Lecture seule'}`;
   applyPermissions();
   init();
 }
@@ -520,88 +471,60 @@ function applyPermissions(){
 function renderAccounts(){
   const box = document.getElementById('accountsTable');
   if(!box) return;
-  box.innerHTML = accounts.map((a,i)=>`
-    <div class="panel" style="background:var(--bg-elevated);margin-bottom:10px;">
-      <h3 style="font-family:var(--disp);text-transform:uppercase;font-size:13px;color:var(--accent);margin:0 0 10px;">${a.role==='admin' ? '🔓 Compte modification' : '👁 Compte lecture seule'} — ${a.label}</h3>
-      <div class="grid3">
-        <div class="field"><label>Identifiant</label><input id="acc_user_${i}" value="${a.username}"></div>
-        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="acc_pass_${i}" placeholder="(laisser vide = inchangé)"></div>
-        <div class="field" style="display:flex;align-items:flex-end;"><button class="btn small ghost" onclick="updateAccount(${i})">Enregistrer</button></div>
-      </div>
-    </div>`).join('');
+  box.innerHTML = `
+    <p class="sub">Connecté en tant que <b style="color:var(--text);">${currentUser.email}</b> (${currentUser.role==='admin'?'Modification':'Lecture seule'}).</p>
+    <p class="sub">Les 3 comptes (identifiants et mots de passe) se gèrent depuis le tableau de bord Supabase → Authentication → Users. C'est là que tu peux réinitialiser un mot de passe oublié ou changer un email.</p>`;
 }
-async function updateAccount(i){
-  if(!requireAdmin()) return;
-  const u = document.getElementById('acc_user_'+i).value.trim();
-  const p = document.getElementById('acc_pass_'+i).value;
-  if(!u){ toast('Identifiant requis'); return; }
-  accounts[i].username = u;
-  if(p){ accounts[i].passHash = simpleHash(p); }
-  await saveKey('accounts', accounts);
-  document.getElementById('acc_pass_'+i).value = '';
-  if(currentUser && i===accounts.findIndex(a=>a.role==='admin' && a.username===u)){
-    currentUser.username = u;
-  }
-  toast('Compte mis à jour');
-}
+
+/* ---------- DONNÉES : lecture/écriture en direct sur Supabase (partagées entre les 3 comptes) ---------- */
+function toDbFleet(v){ return {id:v.id, nom:v.nom, immat:v.immat, prix_jour:v.prixJour, km_inclus:v.kmInclus, km_add:v.kmAdd, disponible:v.disponible}; }
+function fromDbFleet(r){ return {id:r.id, nom:r.nom, immat:r.immat, prixJour:r.prix_jour, kmInclus:r.km_inclus, kmAdd:r.km_add, disponible:r.disponible}; }
+function toDbRental(r){ return {id:r.id, numero:r.numero, veh_id:r.vehId, cli_id:r.cliId, date_depart:r.dateDepart, km_depart:r.kmDepart, date_retour:r.dateRetour||null, km_retour:(r.kmRetour==null?null:r.kmRetour), prix_jour:r.prixJour, km_inclus_jour:r.kmInclusJour, prix_km_add:r.prixKmAdd, remise:r.remise}; }
+function fromDbRental(r){ return {id:r.id, numero:r.numero, vehId:r.veh_id, cliId:r.cli_id, dateDepart:r.date_depart, kmDepart:r.km_depart, dateRetour:r.date_retour, kmRetour:r.km_retour, prixJour:r.prix_jour, kmInclusJour:r.km_inclus_jour, prixKmAdd:r.prix_km_add, remise:r.remise}; }
 
 let fleet = [];
 let clients = [];
 let rentals = [];
 let agence = {nom:'CARLIZEN', nif:'002648016390468', nis:'', rc:'48/00-0163904 B 26', adresse:'', tel:'0560063387', logo:''};
 
+async function fetchAll(){
+  const [fRes, cRes, rRes, aRes] = await Promise.all([
+    sb.from('fleet').select('*').order('nom'),
+    sb.from('clients').select('*').order('numero'),
+    sb.from('rentals').select('*').order('numero'),
+    sb.from('agence').select('*').eq('id',1).limit(1),
+  ]);
+  if(fRes.error) console.error('fleet', fRes.error);
+  if(cRes.error) console.error('clients', cRes.error);
+  if(rRes.error) console.error('rentals', rRes.error);
+  if(aRes.error) console.error('agence', aRes.error);
+  fleet = (fRes.data||[]).map(fromDbFleet);
+  clients = (cRes.data||[]).map(r=>({...r}));
+  rentals = (rRes.data||[]).map(fromDbRental);
+  if(aRes.data && aRes.data[0]) agence = {...agence, ...aRes.data[0]};
+}
+async function refreshData(){
+  await fetchAll();
+  renderAll();
+  toast('Données actualisées');
+}
+
+
 const SEED_FLEET = [
-  {id:'v1', nom:'SWIFT', immat:'500187-125-48', prixJour:12000, kmInclus:350, kmAdd:20, disponible:false},
-  {id:'v2', nom:'I10', immat:'021459-118-16', prixJour:9000, kmInclus:350, kmAdd:20, disponible:false},
+  {id:'v1', nom:'SWIFT', immat:'500187-125-48', prixJour:12000, kmInclus:350, kmAdd:20, disponible:true},
+  {id:'v2', nom:'I10', immat:'021459-118-16', prixJour:9000, kmInclus:350, kmAdd:20, disponible:true},
   {id:'v3', nom:'MG5', immat:'SN016631', prixJour:12000, kmInclus:350, kmAdd:20, disponible:true},
   {id:'v4', nom:'KX1', immat:'T0215320', prixJour:12000, kmInclus:350, kmAdd:20, disponible:true},
-];
-const SEED_CLIENTS = [
-  {id:'c1', nom:'FEGHOUL MOHAMED-YASSINE', tel:'0771030489', remise:10000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c2', nom:'BENHALIMA NASSIM', tel:'0555642987', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c3', nom:'GADI MOHAMMED', tel:'0550202860', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c4', nom:'BENKABOUCHE LOTFI', tel:'0558722444', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c5', nom:'MADMOUN MOHAMED-HABIB', tel:'0774086479', remise:0, obs:'', naissance:'07/03/1984 à Relizane', adresse:'Relizane', permis:'PC A01339080', delivre:'Relizane'},
-  {id:'c6', nom:'ABOUBAKEUR WAWI', tel:'', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c7', nom:'BENKABOUCHE YASSINE', tel:'0770162037', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c8', nom:'BELAID ABDELKRIM', tel:'0551829554', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c9', nom:'MEKHENEF OUSSAMA', tel:'0556657303', remise:2000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c10', nom:'ZOUAOUI YOUCEF', tel:'0776628053', remise:6000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c11', nom:'MOKADDEM ALI-ZINELAABIDINE', tel:'0770703783', remise:4000, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-  {id:'c12', nom:'OUZAID AHMED', tel:'/', remise:0, obs:'', naissance:'', adresse:'', permis:'', delivre:''},
-];
-const SEED_RENTALS = [
-  {id:'r1', vehId:'v1', cliId:'c1', dateDepart:'2026-06-17', kmDepart:12258, dateRetour:'2026-06-22', kmRetour:13265, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:10000},
-  {id:'r2', vehId:'v1', cliId:'c2', dateDepart:'2026-06-22', kmDepart:13268, dateRetour:'2026-06-23', kmRetour:13579, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r3', vehId:'v1', cliId:'c2', dateDepart:'2026-06-24', kmDepart:13700, dateRetour:'2026-06-25', kmRetour:13950, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r4', vehId:'v1', cliId:'c3', dateDepart:'2026-07-01', kmDepart:14000, dateRetour:'2026-07-02', kmRetour:14316, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r5', vehId:'v1', cliId:'c4', dateDepart:'2026-07-09', kmDepart:14316, dateRetour:'2026-07-10', kmRetour:14600, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r6', vehId:'v1', cliId:'c5', dateDepart:'2026-07-12', kmDepart:14897, dateRetour:'2026-07-14', kmRetour:15318, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:0},
-  {id:'r7', vehId:'v1', cliId:'c6', dateDepart:'2026-07-16', kmDepart:15900, dateRetour:'2026-07-17', kmRetour:16150, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r8', vehId:'v1', cliId:'c7', dateDepart:'2026-07-20', kmDepart:16885, dateRetour:'2026-07-21', kmRetour:17200, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r9', vehId:'v2', cliId:'c7', dateDepart:'2026-07-23', kmDepart:123359, dateRetour:'2026-07-24', kmRetour:123699, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r10', vehId:'v1', cliId:'c8', dateDepart:'2026-07-25', kmDepart:18090, dateRetour:'2026-07-26', kmRetour:18440, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r11', vehId:'v1', cliId:'c9', dateDepart:'2026-07-26', kmDepart:18532, dateRetour:'2026-07-27', kmRetour:18882, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:2000},
-  {id:'r12', vehId:'v2', cliId:'c10', dateDepart:'2026-07-27', kmDepart:123729, dateRetour:'2026-07-30', kmRetour:124600, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:6000},
-  {id:'r13', vehId:'v1', cliId:'c12', dateDepart:'2026-07-27', kmDepart:18882, dateRetour:'2026-07-28', kmRetour:19232, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:0},
-  {id:'r14', vehId:'v1', cliId:'c11', dateDepart:'2026-08-01', kmDepart:19232, dateRetour:null, kmRetour:null, prixJour:12000, kmInclusJour:350, prixKmAdd:20, remise:4000},
-  {id:'r15', vehId:'v2', cliId:'c11', dateDepart:'2026-08-02', kmDepart:124642, dateRetour:null, kmRetour:null, prixJour:9000, kmInclusJour:350, prixKmAdd:20, remise:2000},
 ];
 
 function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function nextNumber(arr){ return arr.reduce((m,x)=>Math.max(m, x.numero||0), 0) + 1; }
-function backfillNumbers(arr){
-  let max = arr.reduce((m,x)=>Math.max(m, x.numero||0), 0);
-  let changed = false;
-  arr.forEach(x=>{ if(!x.numero){ max += 1; x.numero = max; changed = true; } });
-  return changed;
-}
 function fmtNum(prefix, n){ return prefix + String(n||0).padStart(4,'0'); }
 function fmtDA(n){ return (Math.round(n||0)).toLocaleString('fr-FR') + ' DA'; }
 function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
-/* ---------- SAUVEGARDE / RESTAURATION (fichier JSON) ---------- */
+/* ---------- SAUVEGARDE / RESTAURATION (fichier JSON, en plus de Supabase) ---------- */
 function exportBackup(){
   const backup = {
     app: 'CARLIZEN RENT CAR — Gestion Location',
@@ -618,15 +541,15 @@ function exportBackup(){
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  localStorage.setItem(STORAGE_PREFIX+'lastBackup', new Date().toLocaleString('fr-FR'));
+  localStorage.setItem('carlizen_lastBackup', new Date().toLocaleString('fr-FR'));
   updateLastBackupInfo();
   toast('Sauvegarde téléchargée');
 }
-function importBackup(event){
+async function importBackup(event){
   if(!requireAdmin()){ event.target.value=''; return; }
   const file = event.target.files[0];
   if(!file) return;
-  if(!confirm('Restaurer cette sauvegarde va remplacer toutes les données actuelles (flotte, clients, locations, en-tête). Continuer ?')){
+  if(!confirm('Restaurer cette sauvegarde va remplacer toutes les données actuelles (flotte, clients, locations, en-tête) sur le serveur, pour tout le monde. Continuer ?')){
     event.target.value = '';
     return;
   }
@@ -635,9 +558,11 @@ function importBackup(event){
     try{
       const data = JSON.parse(reader.result);
       if(!data.fleet || !data.clients || !data.rentals){ toast('Fichier de sauvegarde invalide'); return; }
-      fleet = data.fleet; clients = data.clients; rentals = data.rentals;
-      if(data.agence) agence = data.agence;
-      await saveAll();
+      if(data.fleet.length) await sb.from('fleet').upsert(data.fleet.map(toDbFleet));
+      if(data.clients.length) await sb.from('clients').upsert(data.clients);
+      if(data.rentals.length) await sb.from('rentals').upsert(data.rentals.map(toDbRental));
+      if(data.agence) await sb.from('agence').update(data.agence).eq('id',1);
+      await fetchAll();
       document.getElementById('ag_nom').value = agence.nom||'';
       document.getElementById('ag_nif').value = agence.nif||'';
       document.getElementById('ag_rc').value = agence.rc||'';
@@ -657,22 +582,16 @@ function importBackup(event){
 function updateLastBackupInfo(){
   const el = document.getElementById('lastBackupInfo');
   if(!el) return;
-  const last = localStorage.getItem(STORAGE_PREFIX+'lastBackup');
+  const last = localStorage.getItem('carlizen_lastBackup');
   el.textContent = last ? `Dernière sauvegarde téléchargée : ${last}` : 'Aucune sauvegarde téléchargée pour le moment — pense à en faire une.';
 }
 
 async function init(){
-  fleet = await loadKey('fleet', null);
-  clients = await loadKey('clients', null);
-  rentals = await loadKey('rentals', null);
-  const savedAgence = await loadKey('agence', null);
-  let seeded = false;
-  if(fleet===null){ fleet = SEED_FLEET.map(v=>({...v})); seeded = true; }
-  if(clients===null){ clients = SEED_CLIENTS.map((c,i)=>({...c, numero:i+1})); seeded = true; }
-  if(rentals===null){ rentals = SEED_RENTALS.map((r,i)=>({...r, numero:i+1})); seeded = true; }
-  if(savedAgence){ agence = savedAgence; } else { seeded = true; }
-  const backfilled = backfillNumbers(clients) | backfillNumbers(rentals);
-  if(seeded || backfilled){ await saveAll(); }
+  await fetchAll();
+  if(fleet.length===0 && isAdmin()){
+    await sb.from('fleet').insert(SEED_FLEET.map(toDbFleet));
+    await fetchAll();
+  }
   document.getElementById('ct_date').value = new Date().toISOString().slice(0,10);
   document.getElementById('ag_nom').value = agence.nom||'';
   document.getElementById('ag_nif').value = agence.nif||'';
@@ -683,21 +602,20 @@ async function init(){
   updateLastBackupInfo();
   renderAll();
 }
-async function saveAll(){
-  await Promise.all([saveKey('fleet', fleet), saveKey('clients', clients), saveKey('rentals', rentals), saveKey('agence', agence)]);
-}
 function saveAgence(){
   if(!requireAdmin()) return;
-  agence = {
-    ...agence,
+  const updated = {
     nom: document.getElementById('ag_nom').value.trim() || 'CARLIZEN',
     nif: document.getElementById('ag_nif').value.trim(),
     rc: document.getElementById('ag_rc').value.trim(),
     adresse: document.getElementById('ag_adresse').value.trim(),
     tel: document.getElementById('ag_tel').value.trim(),
   };
-  saveKey('agence', agence);
-  toast('En-tête de l\'agence enregistré');
+  sb.from('agence').update(updated).eq('id',1).then(({error})=>{
+    if(error){ toast('Erreur : '+error.message); return; }
+    agence = {...agence, ...updated};
+    toast('En-tête de l\'agence enregistré');
+  });
 }
 function updateLogoPreview(){
   const wrap = document.getElementById('ag_logo_preview_wrap');
@@ -717,18 +635,20 @@ function handleLogoUpload(e){
   if(!file) return;
   if(file.size > 1.5*1024*1024){ toast('Image trop lourde (max ~1,5 Mo)'); return; }
   const reader = new FileReader();
-  reader.onload = ()=>{
+  reader.onload = async ()=>{
     agence.logo = reader.result;
-    saveKey('agence', agence);
+    const {error} = await sb.from('agence').update({logo: agence.logo}).eq('id',1);
+    if(error){ toast('Erreur : '+error.message); return; }
     updateLogoPreview();
     toast('Logo enregistré');
   };
   reader.readAsDataURL(file);
 }
-function removeLogo(){
+async function removeLogo(){
   if(!requireAdmin()) return;
   agence.logo = '';
-  saveKey('agence', agence);
+  const {error} = await sb.from('agence').update({logo: ''}).eq('id',1);
+  if(error){ toast('Erreur : '+error.message); return; }
   updateLogoPreview();
   document.getElementById('ag_logo').value = '';
   toast('Logo retiré');
@@ -892,9 +812,21 @@ function renderFleet(){
   </tr>`).join('')}
   </tbody></table>`;
 }
-function toggleDispo(id){ if(!requireAdmin()) return; const v=fleet.find(x=>x.id===id); v.disponible=!v.disponible; saveAll(); renderAll(); }
-function deleteVehicule(id){ if(!requireAdmin()) return; if(!confirm('Supprimer ce véhicule ?')) return; fleet=fleet.filter(v=>v.id!==id); saveAll(); renderAll(); }
-function addVehicule(){
+async function toggleDispo(id){
+  if(!requireAdmin()) return;
+  const v=fleet.find(x=>x.id===id);
+  const {error} = await sb.from('fleet').update({disponible: !v.disponible}).eq('id', id);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await fetchAll(); renderAll();
+}
+async function deleteVehicule(id){
+  if(!requireAdmin()) return;
+  if(!confirm('Supprimer ce véhicule ?')) return;
+  const {error} = await sb.from('fleet').delete().eq('id', id);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await fetchAll(); renderAll();
+}
+async function addVehicule(){
   if(!requireAdmin()) return;
   const nom=document.getElementById('v_nom').value.trim();
   const immat=document.getElementById('v_immat').value.trim();
@@ -902,9 +834,11 @@ function addVehicule(){
   const kminclus=parseFloat(document.getElementById('v_kminclus').value)||350;
   const kmadd=parseFloat(document.getElementById('v_kmadd').value)||20;
   if(!nom){ toast('Indiquer le nom du véhicule'); return; }
-  fleet.push({id:uid('v'), nom, immat, prixJour:prix, kmInclus:kminclus, kmAdd:kmadd, disponible:true});
+  const row = toDbFleet({id:uid('v'), nom, immat, prixJour:prix, kmInclus:kminclus, kmAdd:kmadd, disponible:true});
+  const {error} = await sb.from('fleet').insert(row);
+  if(error){ toast('Erreur : '+error.message); return; }
   ['v_nom','v_immat','v_prix'].forEach(id=>document.getElementById(id).value='');
-  saveAll(); renderAll(); toast('Véhicule ajouté');
+  await fetchAll(); renderAll(); toast('Véhicule ajouté');
 }
 
 /* ---------- RENDER: CLIENTS ---------- */
@@ -926,12 +860,18 @@ function renderClients(){
   </tr>`).join('')}
   </tbody></table>`;
 }
-function deleteClient(id){ if(!requireAdmin()) return; if(!confirm('Supprimer ce client ?')) return; clients=clients.filter(c=>c.id!==id); saveAll(); renderAll(); }
-function addClient(){
+async function deleteClient(id){
+  if(!requireAdmin()) return;
+  if(!confirm('Supprimer ce client ?')) return;
+  const {error} = await sb.from('clients').delete().eq('id', id);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await fetchAll(); renderAll();
+}
+async function addClient(){
   if(!requireAdmin()) return;
   const nom=document.getElementById('c_nom').value.trim();
   if(!nom){ toast('Indiquer le nom du client'); return; }
-  clients.push({
+  const row = {
     id:uid('c'), numero:nextNumber(clients), nom,
     tel:document.getElementById('c_tel').value.trim(),
     remise:parseFloat(document.getElementById('c_remise').value)||0,
@@ -940,9 +880,11 @@ function addClient(){
     adresse:document.getElementById('c_adresse').value.trim(),
     permis:document.getElementById('c_permis').value.trim(),
     delivre:document.getElementById('c_delivre').value.trim(),
-  });
+  };
+  const {error} = await sb.from('clients').insert(row);
+  if(error){ toast('Erreur : '+error.message); return; }
   ['c_nom','c_tel','c_remise','c_obs','c_naissance','c_adresse','c_permis','c_delivre'].forEach(id=>document.getElementById(id).value='');
-  saveAll(); renderAll(); toast('Client ajouté');
+  await fetchAll(); renderAll(); toast('Client ajouté');
 }
 
 /* ---------- QUICK ADD CLIENT ---------- */
@@ -958,7 +900,7 @@ function closeQuickClient(){
   document.getElementById('quickClientOverlay').style.display = 'none';
   quickClientTarget = null;
 }
-function saveQuickClient(){
+async function saveQuickClient(){
   if(!requireAdmin()) return;
   const nom = document.getElementById('qc_nom').value.trim();
   if(!nom){ toast('Indiquer le nom du client'); return; }
@@ -972,8 +914,9 @@ function saveQuickClient(){
     permis:document.getElementById('qc_permis').value.trim(),
     delivre:document.getElementById('qc_delivre').value.trim(),
   };
-  clients.push(newClient);
-  saveAll();
+  const {error} = await sb.from('clients').insert(newClient);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await fetchAll();
   renderAll();
   if(quickClientTarget === 'f_client'){
     document.getElementById('f_client').value = newClient.id;
@@ -1023,7 +966,7 @@ function updateCalcPreview(){
   document.addEventListener('change', e=>{ if(e.target.id===id) updateCalcPreview(); });
 });
 
-function addRental(){
+async function addRental(){
   if(!requireAdmin()) return;
   const vehId=document.getElementById('f_vehicule').value;
   const cliId=document.getElementById('f_client').value;
@@ -1036,10 +979,12 @@ function addRental(){
   const v = fleet.find(x=>x.id===vehId);
   if(!vehId || !cliId){ toast('Choisir un véhicule et un client'); return; }
   if(!dateDepart || isNaN(kmDepart)){ toast('Renseigner la date et le km de départ'); return; }
-  rentals.push({id:uid('r'), numero:nextNumber(rentals), vehId, cliId, dateDepart, kmDepart, dateRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise});
-  v.disponible = !!(dateRetour && kmRetour!=null);
+  const newRental = {id:uid('r'), numero:nextNumber(rentals), vehId, cliId, dateDepart, kmDepart, dateRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise};
+  const {error} = await sb.from('rentals').insert(toDbRental(newRental));
+  if(error){ toast('Erreur : '+error.message); return; }
+  await sb.from('fleet').update({disponible: !!(dateRetour && kmRetour!=null)}).eq('id', vehId);
   ['f_dateDepart','f_kmDepart','f_dateRetour','f_kmRetour'].forEach(id=>document.getElementById(id).value='');
-  saveAll(); renderAll(); toast('Location ajoutée');
+  await fetchAll(); renderAll(); toast('Location ajoutée');
 }
 
 /* ---------- RENDER: LOCATIONS TABLE ---------- */
@@ -1113,18 +1058,24 @@ function goToContract(rentalId){
   document.getElementById('ct_rental').value = rentalId;
   renderContract();
 }
-function deleteRental(id){ if(!requireAdmin()) return; if(!confirm('Supprimer cette location ?')) return; rentals=rentals.filter(r=>r.id!==id); saveAll(); renderAll(); }
-function markReturned(id){
+async function deleteRental(id){
+  if(!requireAdmin()) return;
+  if(!confirm('Supprimer cette location ?')) return;
+  const {error} = await sb.from('rentals').delete().eq('id', id);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await fetchAll(); renderAll();
+}
+async function markReturned(id){
   if(!requireAdmin()) return;
   const r = rentals.find(x=>x.id===id);
   const dr = prompt('Date de retour (AAAA-MM-JJ) :', new Date().toISOString().slice(0,10));
   if(!dr) return;
   const kr = prompt('Kilométrage de retour :');
   if(kr===null || kr==='') return;
-  r.dateRetour = dr; r.kmRetour = parseFloat(kr);
-  const v = fleet.find(x=>x.id===r.vehId);
-  if(v) v.disponible = true;
-  saveAll(); renderAll(); toast('Location clôturée');
+  const {error} = await sb.from('rentals').update({date_retour: dr, km_retour: parseFloat(kr)}).eq('id', id);
+  if(error){ toast('Erreur : '+error.message); return; }
+  await sb.from('fleet').update({disponible:true}).eq('id', r.vehId);
+  await fetchAll(); renderAll(); toast('Location clôturée');
 }
 
 /* ---------- CONTRAT ---------- */
@@ -1168,7 +1119,7 @@ function contractHTML(r, lieu, dateContrat){
   const cli = clients.find(x=>x.id===r.cliId) || {};
   const veh = fleet.find(x=>x.id===r.vehId) || {};
   return `
-  <div class="contract-doc">
+  <div class="contract-doc page1">
     ${letterheadHTML()}
     <h2>Contrat de location de voiture</h2>
     <p style="text-align:center;margin:-10px 0 14px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px;">Contrat N° ${fmtNum('CT-',r.numero)} &nbsp;·&nbsp; Fiche client N° ${fmtNum('CL-',cli.numero)}</p>
@@ -1204,12 +1155,11 @@ function contractHTML(r, lieu, dateContrat){
       </tbody></table>
     </div>
     <p class="nb">N.B : Le véhicule ne peut être conduit que par le détenteur du présent contrat.</p>
-    <div class="sign-area">
-      <p class="nb">Fait à ${lieu||'—'}, le ${fmtDate(dateContrat)}</p>
-      <div class="sign"><div>Locataire</div><div>La direction</div></div>
-    </div>
+    <div class="sign-spacer"></div>
+    <p class="nb">Fait à ${lieu||'—'}, le ${fmtDate(dateContrat)}</p>
+    <div class="sign"><div>Locataire</div><div>La direction</div></div>
   </div>
-  <div class="contract-doc page-break">
+  <div class="contract-doc annexe-page page-break">
     ${letterheadHTML()}
     <div class="annexe-head">Annexe au contrat de location</div>
     <div class="annexe annexe-cols">
@@ -1256,8 +1206,8 @@ function renderAll(){
 }
 
 (async function boot(){
-  await loadAccounts();
-  if(checkExistingSession()){
+  const loggedIn = await checkExistingSession();
+  if(loggedIn){
     showApp();
   } else {
     document.getElementById('loginScreen').style.display = 'flex';
