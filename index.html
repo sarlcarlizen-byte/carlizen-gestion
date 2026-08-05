@@ -768,8 +768,14 @@ function conflitPeriode(vehId, dateDebut, dateFin){
   const fin = dateFin || dateDebut;
   const veh = fleet.find(v=>v.id===vehId);
   if(veh && veh.maintenance===true) return 'maintenance';
-  const ongoing = rentals.some(r=> r.vehId===vehId && !(r.dateRetour && r.kmRetour!=null));
-  if(ongoing) return 'loue';
+  const today = new Date().toISOString().slice(0,10);
+  // Une location "en cours" (sans date de retour connue) ne bloque que si la
+  // période demandée commence aujourd'hui ou avant : le véhicule est physiquement
+  // indisponible maintenant. Pour une date de départ future, on ne peut pas savoir
+  // si la location en cours sera terminée d'ici là, donc on ne bloque pas —
+  // à l'agence de juger selon ce que le client actuel lui a annoncé.
+  const ongoingBlocksNow = rentals.some(r=> r.vehId===vehId && !(r.dateRetour && r.kmRetour!=null) && dateDebut <= today);
+  if(ongoingBlocksNow) return 'loue';
   const pastConflict = rentals.some(r=> r.vehId===vehId && r.dateRetour && periodeChevauche(dateDebut, fin, r.dateDepart, r.dateRetour));
   if(pastConflict) return 'loue';
   const resConflict = reservations.some(res=> res.vehId===vehId && periodeChevauche(dateDebut, fin, res.dateDebut, res.dateFin));
