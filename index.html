@@ -116,22 +116,28 @@
   #contractPrint{display:none;}
   .contract-select{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
   .contract-select .field{flex:1;min-width:220px;margin-bottom:0;}
-  .contract-doc{position:relative;background:#f4f1ea;color:#1a1a1a;border-radius:10px;padding:16mm 18mm;font-family:'Inter',sans-serif;width:210mm;min-height:297mm;margin:0 auto 14px;box-sizing:border-box;font-size:14.5px;font-weight:600;line-height:1.5;}
-  .letterhead{text-align:center;border-bottom:2px solid #1a1a1a;padding-bottom:10px;margin-bottom:16px;}
-  .letterhead .lh-top{font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  :root{ --brand-lime:#e2ff00; }
+  .contract-doc{position:relative;background:#f4f1ea;color:#1a1a1a;border-radius:10px;padding:15mm 18mm;font-family:'Inter',sans-serif;width:210mm;min-height:297mm;margin:0 auto 14px;box-sizing:border-box;font-size:14px;font-weight:600;line-height:1.42;}
+  .contract-doc.page1::before{content:'';position:absolute;top:7mm;left:7mm;right:7mm;bottom:7mm;border:2.5px solid #1a1a1a;pointer-events:none;}
+  .contract-doc.page1::after{content:'';position:absolute;top:9mm;left:9mm;right:9mm;bottom:9mm;border:1px solid var(--brand-lime);pointer-events:none;}
+  .lh-logo{display:block;margin:0 auto 8px;max-height:78px;max-width:190px;object-fit:contain;}
+  .letterhead{text-align:center;border-bottom:3px solid #1a1a1a;padding-bottom:9px;margin-bottom:13px;}
+  .letterhead .lh-top{font-family:'Oswald',sans-serif;font-size:15px;text-transform:uppercase;letter-spacing:1px;font-weight:700;}
   .letterhead .lh-sarl{font-family:'Oswald',sans-serif;font-size:20px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:2px 0;}
-  .letterhead .lh-meta{font-size:11.5px;color:#333;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:3px;}
-  .contract-doc h2{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:21px;font-weight:700;margin:0 0 16px;}
-  .contract-doc table{margin-bottom:14px;width:100%;}
-  .contract-doc thead th{color:#333;font-weight:700;border-color:#ccc;padding:6px 10px;font-size:12px;}
-  .contract-doc tbody td{border-color:#ccc;color:#111;font-weight:600;padding:8px 10px;font-size:14.5px;}
-  .contract-doc .cblock{margin-bottom:16px;}
-  .contract-doc .cblock h3{font-family:'Oswald',sans-serif;font-size:14.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--accent-dim);padding-bottom:4px;margin-bottom:8px;}
-  .contract-doc .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
-  .contract-doc p.nb{font-size:12.5px;font-weight:600;font-style:italic;margin:8px 0;}
-  .contract-doc .sign-spacer{height:48mm;}
-  .contract-doc .sign{display:flex;justify-content:space-between;margin-top:40px;font-size:14px;font-weight:700;}
-  .contract-doc .sign div{border-top:1px solid #999;padding-top:26px;width:42%;text-align:center;}
+  .letterhead .lh-meta{font-size:11px;color:#333;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:3px;}
+  .contract-doc h2{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.6px;font-size:24px;font-weight:700;margin:0 0 7px;white-space:nowrap;}
+  .title-bar{width:110px;height:4px;background:var(--brand-lime);margin:0 auto 14px;border-radius:3px;box-shadow:0 0 0 1px #1a1a1a;}
+  .contract-doc table{margin-bottom:10px;width:100%;}
+  .contract-doc thead th{color:#333;font-weight:700;border-color:#ccc;padding:5px 9px;font-size:11.5px;}
+  .contract-doc tbody td{border-color:#ccc;color:#111;font-weight:600;padding:6px 9px;font-size:14px;}
+  .contract-doc .cblock{margin-bottom:12px;border:1.3px solid #1a1a1a;border-radius:7px;padding:9px 12px;background:rgba(226,255,0,.05);}
+  .contract-doc .cblock h3{font-family:'Oswald',sans-serif;font-size:13.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--brand-lime);padding-bottom:4px;margin:-1px 0 8px;}
+  .contract-doc .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .contract-doc .two-col table, .contract-doc .cblock table{margin-bottom:0;}
+  .contract-doc p.nb{font-size:12px;font-weight:600;font-style:italic;margin:6px 0;}
+  .contract-doc .sign-spacer{height:26mm;}
+  .contract-doc .sign{display:flex;justify-content:space-between;margin-top:30px;font-size:13.5px;font-weight:700;}
+  .contract-doc .sign div{border-top:1px solid #999;padding-top:20px;width:42%;text-align:center;}
   .annexe-head{font-family:'Oswald',sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.8px;font-size:13px;margin:0 0 8px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;}
   .annexe-cols{column-count:2;column-gap:9mm;column-rule:1px solid #ccc;}
   .annexe h3{font-family:'Oswald',sans-serif;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;margin:7px 0 2px;break-after:avoid;}
@@ -1321,9 +1327,9 @@ function letterheadHTML(){
     agence.adresse ? `Adresse : ${agence.adresse}` : null,
     agence.tel ? `Tél : ${agence.tel}` : null,
   ].filter(Boolean).join(' &nbsp;·&nbsp; ');
-  const logoImg = agence.logo ? `<img src="${agence.logo}" style="max-height:42px;max-width:110px;position:absolute;left:0;top:0;">` : '';
+  const logoImg = agence.logo ? `<img src="${agence.logo}" class="lh-logo">` : '';
   return `
-    <div class="letterhead" style="position:relative;">
+    <div class="letterhead">
       ${logoImg}
       <div class="lh-top">Agence de location de voiture</div>
       <div class="lh-sarl">SARL ${agence.nom||'CARLIZEN'}</div>
@@ -1338,7 +1344,8 @@ function contractHTML(r, lieu, dateContrat){
   <div class="contract-doc page1">
     ${letterheadHTML()}
     <h2>Contrat de location de voiture</h2>
-    <p style="text-align:center;margin:-10px 0 14px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px;">Contrat N° ${fmtNum('CT-',r.numero)} &nbsp;·&nbsp; Fiche client N° ${fmtNum('CL-',cli.numero)}</p>
+    <div class="title-bar"></div>
+    <p style="text-align:center;margin:-14px 0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.5px;">Contrat N° ${fmtNum('CT-',r.numero)} &nbsp;·&nbsp; Fiche client N° ${fmtNum('CL-',cli.numero)}</p>
     <div class="two-col">
       <div class="cblock">
         <h3>Véhicule</h3>
