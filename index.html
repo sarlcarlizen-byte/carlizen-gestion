@@ -260,6 +260,9 @@
         <div class="field"><label>Km départ</label><input type="number" id="f_kmDepart" placeholder="ex: 12000"></div>
       </div>
       <div class="grid3">
+        <div class="field"><label>Durée prévue (jours)</label><input type="number" id="f_dureePrevue" min="1" placeholder="ex: 2 ou 3"></div>
+      </div>
+      <div class="grid3">
         <div class="field"><label>Date retour (optionnel)</label><input type="date" id="f_dateRetour"></div>
         <div class="field"><label>Heure retour (optionnel)</label><input type="time" id="f_heureRetour"></div>
         <div class="field"><label>Km retour (optionnel)</label><input type="number" id="f_kmRetour"></div>
@@ -1103,11 +1106,28 @@ function updateCalcPreview(){
     (fraisSupp>0 ? ` · Frais suppl. <b>${fmtDA(fraisSupp)}</b>` : '') +
     ` · Total <b>${fmtDA(total)}</b> · Remise <b>${fmtDA(remise)}</b> · <b style="color:var(--accent)">Net à payer ${fmtDA(net)}</b>`;
 }
-['f_vehicule','f_dateDepart','f_heureDepart','f_dateRetour','f_heureRetour','f_kmDepart','f_kmRetour','f_remise','f_fraisSupp'].forEach(id=>{
-  const handler = ()=>{ if(id==='f_dateDepart'||id==='f_dateRetour') updateVehiculePreview(); else updateCalcPreview(); };
+['f_vehicule','f_dateDepart','f_heureDepart','f_dateRetour','f_heureRetour','f_kmDepart','f_kmRetour','f_remise','f_fraisSupp','f_dureePrevue'].forEach(id=>{
+  const handler = ()=>{ if(id==='f_dateDepart'||id==='f_dateRetour'||id==='f_dureePrevue') { applyDureePrevue(id); updateVehiculePreview(); } else updateCalcPreview(); };
   document.addEventListener('input', e=>{ if(e.target.id===id) handler(); });
   document.addEventListener('change', e=>{ if(e.target.id===id) handler(); });
 });
+// Si l'utilisateur indique une durée prévue (ex: 2 ou 3 jours), on calcule
+// automatiquement la date de retour prévue = date départ + durée.
+// Le champ "Date retour" reste modifiable manuellement si besoin.
+function applyDureePrevue(changedId){
+  const dureeEl = document.getElementById('f_dureePrevue');
+  const depEl = document.getElementById('f_dateDepart');
+  const retEl = document.getElementById('f_dateRetour');
+  const duree = parseInt(dureeEl.value, 10);
+  if(!depEl.value || isNaN(duree) || duree < 1) return;
+  // Ne pas écraser une date retour saisie manuellement par l'utilisateur,
+  // sauf si c'est justement le champ durée (ou date départ) qui vient de changer.
+  if(changedId==='f_dureePrevue' || changedId==='f_dateDepart'){
+    const d = new Date(depEl.value+'T00:00:00');
+    d.setDate(d.getDate()+duree);
+    retEl.value = d.toISOString().slice(0,10);
+  }
+}
 
 async function addRental(){
   if(!requireAdmin()) return;
@@ -1129,7 +1149,7 @@ async function addRental(){
   const newRental = {id:uid('r'), numero:nextNumber(rentals), vehId, cliId, dateDepart, heureDepart, kmDepart, dateRetour, heureRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise, fraisSupp, fraisSuppLabel};
   const {error} = await sb.from('rentals').insert(toDbRental(newRental));
   if(error){ toast('Erreur : '+error.message); return; }
-  ['f_dateDepart','f_heureDepart','f_kmDepart','f_dateRetour','f_heureRetour','f_kmRetour','f_fraisSupp','f_fraisSuppLabel'].forEach(id=>document.getElementById(id).value='');
+  ['f_dateDepart','f_heureDepart','f_kmDepart','f_dureePrevue','f_dateRetour','f_heureRetour','f_kmRetour','f_fraisSupp','f_fraisSuppLabel'].forEach(id=>document.getElementById(id).value='');
   await fetchAll(); renderAll(); toast('Location ajoutée');
 }
 
