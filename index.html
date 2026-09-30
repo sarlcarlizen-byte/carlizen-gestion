@@ -528,10 +528,20 @@ function renderAccounts(){
 }
 
 /* ---------- DONNÉES : lecture/écriture en direct sur Supabase (partagées entre les 3 comptes) ---------- */
-function toDbFleet(v){ return {id:v.id, nom:v.nom, immat:v.immat, prix_jour:v.prixJour, km_inclus:v.kmInclus, km_add:v.kmAdd, disponible:v.disponible, maintenance:!!v.maintenance}; }
-function fromDbFleet(r){ return {id:r.id, nom:r.nom, immat:r.immat, prixJour:r.prix_jour, kmInclus:r.km_inclus, kmAdd:r.km_add, disponible:r.disponible, maintenance:!!r.maintenance}; }
-function toDbRental(r){ return {id:r.id, numero:r.numero, veh_id:r.vehId, cli_id:r.cliId, date_depart:r.dateDepart, heure_depart:r.heureDepart||null, km_depart:r.kmDepart, date_retour:r.dateRetour||null, heure_retour:r.heureRetour||null, km_retour:(r.kmRetour==null?null:r.kmRetour), prix_jour:r.prixJour, km_inclus_jour:r.kmInclusJour, prix_km_add:r.prixKmAdd, remise:r.remise, frais_supp:r.fraisSupp||0, frais_supp_label:r.fraisSuppLabel||null}; }
-function fromDbRental(r){ return {id:r.id, numero:r.numero, vehId:r.veh_id, cliId:r.cli_id, dateDepart:r.date_depart, heureDepart:r.heure_depart, kmDepart:r.km_depart, dateRetour:r.date_retour, heureRetour:r.heure_retour, kmRetour:r.km_retour, prixJour:r.prix_jour, kmInclusJour:r.km_inclus_jour, prixKmAdd:r.prix_km_add, remise:r.remise, fraisSupp:r.frais_supp||0, fraisSuppLabel:r.frais_supp_label}; }
+// toNum : convertit n'importe quelle valeur (nombre, texte "12000", "12 000",
+// "12,000", null, vide...) en nombre fiable. Si la conversion échoue, renvoie
+// la valeur par défaut au lieu de planter le calcul (NaN) pour ce véhicule/cette location.
+function toNum(v, fallback=0){
+  if(typeof v === 'number') return isNaN(v) ? fallback : v;
+  if(v===null || v===undefined || v==='') return fallback;
+  const cleaned = String(v).replace(/[^\d.-]/g,'');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? fallback : n;
+}
+function toDbFleet(v){ return {id:v.id, nom:v.nom, immat:v.immat, prix_jour:toNum(v.prixJour), km_inclus:toNum(v.kmInclus,350), km_add:toNum(v.kmAdd,20), disponible:v.disponible, maintenance:!!v.maintenance}; }
+function fromDbFleet(r){ return {id:r.id, nom:r.nom, immat:r.immat, prixJour:toNum(r.prix_jour), kmInclus:toNum(r.km_inclus,350), kmAdd:toNum(r.km_add,20), disponible:r.disponible, maintenance:!!r.maintenance}; }
+function toDbRental(r){ return {id:r.id, numero:r.numero, veh_id:r.vehId, cli_id:r.cliId, date_depart:r.dateDepart, heure_depart:r.heureDepart||null, km_depart:toNum(r.kmDepart), date_retour:r.dateRetour||null, heure_retour:r.heureRetour||null, km_retour:(r.kmRetour==null?null:toNum(r.kmRetour)), prix_jour:toNum(r.prixJour), km_inclus_jour:toNum(r.kmInclusJour,350), prix_km_add:toNum(r.prixKmAdd,20), remise:toNum(r.remise), frais_supp:toNum(r.fraisSupp), frais_supp_label:r.fraisSuppLabel||null}; }
+function fromDbRental(r){ return {id:r.id, numero:r.numero, vehId:r.veh_id, cliId:r.cli_id, dateDepart:r.date_depart, heureDepart:r.heure_depart, kmDepart:toNum(r.km_depart), dateRetour:r.date_retour, heureRetour:r.heure_retour, kmRetour:(r.km_retour==null?null:toNum(r.km_retour)), prixJour:toNum(r.prix_jour), kmInclusJour:toNum(r.km_inclus_jour,350), prixKmAdd:toNum(r.prix_km_add,20), remise:toNum(r.remise), fraisSupp:toNum(r.frais_supp), fraisSuppLabel:r.frais_supp_label}; }
 function toDbReservation(r){ return {id:r.id, numero:r.numero, veh_id:r.vehId, cli_nom:r.cliNom, tel:r.tel, date_debut:r.dateDebut, date_fin:r.dateFin, notes:r.notes||''}; }
 function fromDbReservation(r){ return {id:r.id, numero:r.numero, vehId:r.veh_id, cliNom:r.cli_nom, tel:r.tel, dateDebut:r.date_debut, dateFin:r.date_fin, notes:r.notes||''}; }
 
@@ -713,13 +723,7 @@ async function removeLogo(){
 }
 
 /* ---------- COMPUTATION ---------- */
-function daysBetween(a,b){
-  if(!a) return 1;
-  if(!b) return 1;
-  const d1=new Date(a), d2=new Date(b);
-  const diff = Math.round((d2-d1)/86400000);
-  return Math.max(diff,1);
-}
+// daysBetween est défini plus bas (voir section "Nouvelle location"), avec parseYMD.
 const RETARD_TARIF_HEURE = 1000; // DA par heure de retard, cf. Article 13 de l'annexe
 function heuresRetard(heureDepart, heureRetour){
   if(!heureDepart || !heureRetour) return 0;
@@ -732,16 +736,19 @@ function heuresRetard(heureDepart, heureRetour){
 function computeRental(r){
   const veh = fleet.find(v=>v.id===r.vehId) || {prixJour:r.prixJour, kmInclus:r.kmInclusJour, kmAdd:r.prixKmAdd, nom:'—', immat:'—'};
   const cli = clients.find(c=>c.id===r.cliId) || {nom:'—'};
+  const prixJour = toNum(r.prixJour ?? veh.prixJour);
+  const kmInclusJour = toNum(r.kmInclusJour ?? veh.kmInclus, 350);
+  const prixKmAdd = toNum(r.prixKmAdd ?? veh.kmAdd, 20);
   const nbrJours = daysBetween(r.dateDepart, r.dateRetour);
-  const kmParcourus = (r.kmRetour!=null && r.kmRetour!=='') ? (r.kmRetour - r.kmDepart) : null;
-  const kmInclusTotal = nbrJours * (r.kmInclusJour ?? veh.kmInclus);
+  const kmParcourus = (r.kmRetour!=null && r.kmRetour!=='') ? (toNum(r.kmRetour) - toNum(r.kmDepart)) : null;
+  const kmInclusTotal = nbrJours * kmInclusJour;
   const kmAdditionnel = kmParcourus!=null ? Math.max(0, kmParcourus - kmInclusTotal) : 0;
   const retourEffectif = !!(r.dateRetour && r.kmRetour!=null && r.kmRetour!=='');
   const retardH = retourEffectif ? heuresRetard(r.heureDepart, r.heureRetour) : 0;
   const retardFrais = Math.ceil(retardH) * RETARD_TARIF_HEURE;
-  const fraisSupp = r.fraisSupp || 0;
-  const total = nbrJours * r.prixJour + kmAdditionnel * r.prixKmAdd + fraisSupp + retardFrais;
-  const totalNet = total - (r.remise||0);
+  const fraisSupp = toNum(r.fraisSupp);
+  const total = nbrJours * prixJour + kmAdditionnel * prixKmAdd + fraisSupp + retardFrais;
+  const totalNet = total - toNum(r.remise);
   let status = 'ongoing';
   if(retourEffectif){
     status = (kmAdditionnel>0 || retardFrais>0) ? 'overrun' : 'done';
@@ -1054,35 +1061,62 @@ async function saveQuickClient(){
 }
 
 /* ---------- FORM: NOUVELLE LOCATION ---------- */
+// parseYMD : lit une date "AAAA-MM-JJ" (valeur native d'un <input type="date">)
+// comme une date LOCALE à minuit, de façon explicite et sans ambiguïté —
+// évite tout écart lié à l'interprétation UTC des chaînes de date par le navigateur.
+function parseYMD(s){
+  if(!s) return null;
+  const parts = s.split('-').map(Number);
+  if(parts.length!==3 || parts.some(isNaN)) return null;
+  const [y,m,d] = parts;
+  return new Date(y, m-1, d);
+}
+function daysBetween(a,b){
+  const d1 = parseYMD(a);
+  const d2 = parseYMD(b);
+  if(!d1 || !d2) return 1;
+  const diff = Math.round((d2-d1)/86400000);
+  return Math.max(diff,1);
+}
+
 function updateVehiculePreview(){
   const v = fleet.find(x=>x.id===document.getElementById('f_vehicule').value);
   const box = document.getElementById('prevVehicule');
   const dot = document.getElementById('vehStatusDot');
-  if(!v){ box.innerHTML='—'; if(dot){ dot.className='status-dot'; dot.title=''; } return; }
-  const dep = document.getElementById('f_dateDepart').value;
-  const ret = document.getElementById('f_dateRetour').value;
-  const conflit = dep ? conflitPeriode(v.id, dep, ret) : vehiculeStatus(v.id)!=='disponible' ? vehiculeStatus(v.id) : null;
-  const ok = !conflit;
-  if(dot){
-    dot.className = 'status-dot ' + (ok ? 'green' : 'red');
-    dot.title = ok ? 'Disponible' : statusLabelFR(conflit);
+  if(!v){
+    box.innerHTML='—';
+    if(dot){ dot.className='status-dot'; dot.title=''; }
+  } else {
+    const dep = document.getElementById('f_dateDepart').value;
+    const ret = document.getElementById('f_dateRetour').value;
+    const conflit = dep ? conflitPeriode(v.id, dep, ret) : vehiculeStatus(v.id)!=='disponible' ? vehiculeStatus(v.id) : null;
+    const ok = !conflit;
+    if(dot){
+      dot.className = 'status-dot ' + (ok ? 'green' : 'red');
+      dot.title = ok ? 'Disponible' : statusLabelFR(conflit);
+    }
+    box.innerHTML = `Prix/jour : <b>${fmtDA(v.prixJour)}</b> · Km inclus/jour : <b>${v.kmInclus}</b><br>` +
+      `<span style="color:${ok?'var(--success)':'var(--danger)'};font-weight:600;">${ok?'🟢 DISPONIBLE':'🔴 '+statusLabelFR(conflit).toUpperCase()+(dep?' sur cette période':'')}</span>` +
+      `${!ok?' — vérifie les dates avant de confirmer':''}`;
   }
-  box.innerHTML = `Prix/jour : <b>${fmtDA(v.prixJour)}</b> · Km inclus/jour : <b>${v.kmInclus}</b><br>` +
-    `<span style="color:${ok?'var(--success)':'var(--danger)'};font-weight:600;">${ok?'🟢 DISPONIBLE':'🔴 '+statusLabelFR(conflit).toUpperCase()+(dep?' sur cette période':'')}</span>` +
-    `${!ok?' — vérifie les dates avant de confirmer':''}`;
+  // Le calcul du prix est toujours relancé ici, qu'un véhicule soit sélectionné ou non
+  // (updateCalcPreview gère elle-même le cas "aucun véhicule").
   updateCalcPreview();
 }
 function updateClientPreview(){
   const c = clients.find(x=>x.id===document.getElementById('f_client').value);
   const box = document.getElementById('prevClient');
-  if(!c){ box.innerHTML='—'; return; }
-  box.innerHTML = `Remise habituelle : <b>${fmtDA(c.remise)}</b>${c.tel?` · Tél : <b>${c.tel}</b>`:''}`;
-  document.getElementById('f_remise').value = c.remise||0;
+  if(!c){ box.innerHTML='—'; }
+  else {
+    box.innerHTML = `Remise habituelle : <b>${fmtDA(c.remise)}</b>${c.tel?` · Tél : <b>${c.tel}</b>`:''}`;
+    document.getElementById('f_remise').value = c.remise||0;
+  }
   updateCalcPreview();
 }
 function updateCalcPreview(){
+  const box = document.getElementById('prevCalc');
   const v = fleet.find(x=>x.id===document.getElementById('f_vehicule').value);
-  if(!v) return;
+  if(!v){ box.innerHTML = 'Sélectionne un véhicule pour voir le calcul.'; return; }
   const dep=document.getElementById('f_dateDepart').value;
   const heureDep=document.getElementById('f_heureDepart').value;
   const ret=document.getElementById('f_dateRetour').value;
@@ -1091,23 +1125,32 @@ function updateCalcPreview(){
   const kr=parseFloat(document.getElementById('f_kmRetour').value);
   const remise=parseFloat(document.getElementById('f_remise').value)||0;
   const fraisSupp=parseFloat(document.getElementById('f_fraisSupp').value)||0;
-  const jours = daysBetween(dep||null, ret||null);
-  const kmInclusTotal = jours*v.kmInclus;
+  if(!dep){ box.innerHTML = 'Renseigne au moins la date de départ pour voir le calcul.'; return; }
+  const jours = daysBetween(dep, ret);
+  const prixJour = toNum(v.prixJour);
+  const kmInclus = toNum(v.kmInclus, 350);
+  const kmAddPrix = toNum(v.kmAdd, 20);
+  const kmInclusTotal = jours*kmInclus;
   let kmParcourus=null, kmAdd=0;
   if(!isNaN(kr) && !isNaN(kd)){ kmParcourus = kr-kd; kmAdd=Math.max(0,kmParcourus-kmInclusTotal); }
   const retardH = (ret && kr) ? heuresRetard(heureDep, heureRet) : 0;
   const retardFrais = Math.ceil(retardH) * RETARD_TARIF_HEURE;
-  const total = jours*v.prixJour + kmAdd*v.kmAdd + fraisSupp + retardFrais;
+  const total = jours*prixJour + kmAdd*kmAddPrix + fraisSupp + retardFrais;
   const net = total-remise;
-  document.getElementById('prevCalc').innerHTML =
-    `Aperçu : <b>${jours}</b> jour(s) · km inclus <b>${kmInclusTotal}</b>` +
+  box.innerHTML =
+    `Aperçu : <b>${jours}</b> jour(s) × <b>${fmtDA(prixJour)}</b>/jour · km inclus <b>${kmInclusTotal}</b>` +
     (kmParcourus!=null? ` · km parcourus <b>${kmParcourus}</b> · km additionnel <b>${kmAdd}</b>`:' · km retour non saisi (location en cours)') +
     (retardFrais>0 ? ` · <b style="color:var(--danger)">Retard ${Math.ceil(retardH)}h = ${fmtDA(retardFrais)}</b>` : '') +
     (fraisSupp>0 ? ` · Frais suppl. <b>${fmtDA(fraisSupp)}</b>` : '') +
     ` · Total <b>${fmtDA(total)}</b> · Remise <b>${fmtDA(remise)}</b> · <b style="color:var(--accent)">Net à payer ${fmtDA(net)}</b>`;
 }
 ['f_vehicule','f_dateDepart','f_heureDepart','f_dateRetour','f_heureRetour','f_kmDepart','f_kmRetour','f_remise','f_fraisSupp','f_dureePrevue'].forEach(id=>{
-  const handler = ()=>{ if(id==='f_dateDepart'||id==='f_dateRetour'||id==='f_dureePrevue') { applyDureePrevue(id); updateVehiculePreview(); } else updateCalcPreview(); };
+  const handler = ()=>{
+    if(id==='f_dateDepart'||id==='f_dateRetour'||id==='f_dureePrevue') applyDureePrevue(id);
+    // Dans tous les cas, on rafraîchit le statut véhicule ET le calcul du prix,
+    // pour être sûr que le total reflète toujours les dates actuellement saisies.
+    updateVehiculePreview();
+  };
   document.addEventListener('input', e=>{ if(e.target.id===id) handler(); });
   document.addEventListener('change', e=>{ if(e.target.id===id) handler(); });
 });
@@ -1123,9 +1166,10 @@ function applyDureePrevue(changedId){
   // Ne pas écraser une date retour saisie manuellement par l'utilisateur,
   // sauf si c'est justement le champ durée (ou date départ) qui vient de changer.
   if(changedId==='f_dureePrevue' || changedId==='f_dateDepart'){
-    const d = new Date(depEl.value+'T00:00:00');
+    const d = parseYMD(depEl.value);
     d.setDate(d.getDate()+duree);
-    retEl.value = d.toISOString().slice(0,10);
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    retEl.value = `${y}-${m}-${day}`;
   }
 }
 
@@ -1439,8 +1483,8 @@ document.getElementById('tabs').addEventListener('click', e=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+btn.dataset.view).classList.add('active');
 });
-document.getElementById('f_vehicule').addEventListener('change', updateVehiculePreview);
-document.getElementById('f_client').addEventListener('change', updateClientPreview);
+// (les écouteurs de f_vehicule et f_client sont déjà posés plus haut, dans la boucle
+// forEach de la section "Nouvelle location" — pas besoin de les redéfinir ici)
 
 function renderAll(){
   renderFleet();
