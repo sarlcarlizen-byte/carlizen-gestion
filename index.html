@@ -70,7 +70,7 @@
   .panel .sub{color:var(--text-dim);font-size:11.5px;margin:0 0 14px;font-weight:600;}
 
   /* KPI grid */
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;border:2px solid #7f9db9;border-radius:6px;padding:14px;background:#eef4fb;}
   .kpi{background:var(--bg-elevated);border:1px solid #cdd6e0;border-radius:6px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12);}
   .kpi .label{font-size:11px;color:var(--text-dim);text-transform:none;letter-spacing:0;font-weight:700;}
   .kpi .value{font-family:var(--mono);font-size:25px;font-weight:700;margin-top:6px;color:#111;}
@@ -78,7 +78,7 @@
   .kpi.danger .value{color:var(--danger);}
   .kpi.success .value{color:var(--success);}
 
-  table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:2px solid #7f9db9;border-radius:4px;overflow:hidden;}
   thead th{text-align:left;color:#0d47a8;font-weight:700;text-transform:none;font-size:11.5px;letter-spacing:0;padding:8px 10px;
     background:linear-gradient(180deg,#f4f8fd,#d9e8f7);border:1px solid #c0d0e0;}
   tbody td{padding:7px 10px;border:1px solid #e2e2e2;vertical-align:middle;font-weight:600;}
@@ -121,6 +121,8 @@
   .btn.ghost:hover{background:var(--btn-grad-hover);}
   .btn.danger{background:linear-gradient(180deg,#ffe3e3,#ffc6c6);color:#a11d1d;border-color:#e0a0a0;}
   .btn.small{padding:6px 10px;font-size:11px;min-width:104px;text-align:center;}
+  .btn.icon{min-width:0;width:38px;height:34px;padding:0;font-size:16px;display:inline-flex;align-items:center;justify-content:center;}
+  .btn.icon.danger{background:linear-gradient(180deg,#ffe3e3,#ffc6c6);border-color:#e0a0a0;}
   .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
 
   .preview-box{background:var(--bg-elevated);border:1px solid #cdd6e0;border-radius:5px;padding:11px 13px;font-size:12px;color:#111;margin-top:8px;font-weight:600;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);}
@@ -198,7 +200,7 @@
   <div class="topbar">
     <div class="brand">
       <img id="topLogo" style="display:none;height:40px;width:40px;object-fit:contain;background:#fff;border-radius:8px;padding:4px;">
-      <div class="plate">CARLIZEN RENT CAR</div>
+      <div style="font-weight:700;font-size:22px;color:#fff;letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.4);">CARLIZEN RENT CAR</div>
       <div>
         <h1>Gestion Location Véhicules</h1>
         <p>Base de données unique — flotte, clients, locations &amp; contrats <span style="color:#fffb8f;font-weight:700;">· V4 (thème XP)</span></p>
@@ -254,7 +256,7 @@
   <section class="view" id="view-locations">
     <div class="panel" id="newRentalPanel" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #808080;padding-bottom:5px;margin-bottom:6px;">
-        <h2 style="border:none;padding:0;margin:0;">Nouvelle location</h2>
+        <h2 id="newRentalPanelTitle" style="border:none;padding:0;margin:0;">Nouvelle location</h2>
         <button class="btn small" onclick="toggleNewRentalPanel()" title="Fermer">✕ Fermer</button>
       </div>
       <p class="sub">Remplir les champs puis ajouter — le calcul se fait automatiquement</p>
@@ -299,7 +301,7 @@
         <div class="field"></div>
         <div class="field"></div>
         <div class="field" style="display:flex;align-items:flex-end;">
-          <button class="btn" style="width:100%" onclick="addRental()">+ Ajouter la location</button>
+          <button class="btn" id="rentalSubmitBtn" style="width:100%" onclick="addRental()">+ Ajouter la location</button>
         </div>
       </div>
       <div class="preview-box" id="prevCalc">Aperçu du calcul —</div>
@@ -556,7 +558,13 @@ function toggleNewRentalPanel(){
   const isHidden = panel.style.display === 'none';
   panel.style.display = isHidden ? '' : 'none';
   if(isHidden){
+    // Ouverture via le bouton "+" (pas via "Modifier") : on repart d'un
+    // formulaire vierge en mode création.
+    resetRentalFormMode();
+    ['f_dateDepart','f_heureDepart','f_kmDepart','f_dureePrevue','f_dateRetour','f_heureRetour','f_kmRetour','f_remise','f_fraisSupp','f_fraisSuppLabel'].forEach(id=>document.getElementById(id).value='');
     panel.scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    resetRentalFormMode();
   }
 }
 function renderAccounts(){
@@ -979,7 +987,7 @@ function renderFleet(){
     <td class="num">${fmtDA(v.kmAdd)}</td>
     <td><span class="status-dot ${st==='disponible'?'green':'red'}" style="width:12px;height:12px;vertical-align:middle;margin-right:6px;"></span><span class="tag ${statusTagClass(st)}">${statusLabelFR(st)}</span></td>
     <td class="row-actions">
-      ${isAdmin() ? `<button class="btn small ghost" onclick="toggleDispo('${v.id}')">${v.maintenance?'Remettre en service':'Mettre en maintenance'}</button><button class="btn small danger" onclick="deleteVehicule('${v.id}')">Suppr.</button>` : '—'}
+      ${isAdmin() ? `<button class="btn icon ghost" onclick="toggleDispo('${v.id}')" title="${v.maintenance?'Remettre en service':'Mettre en maintenance'}">🔧</button><button class="btn icon danger" onclick="deleteVehicule('${v.id}')" title="Supprimer">🗑️</button>` : '—'}
     </td>
   </tr>`;
   }).join('')}
@@ -1030,7 +1038,7 @@ function renderClients(){
     <td class="mono">${c.tel||'—'}</td>
     <td class="num">${fmtDA(c.remise)}</td>
     <td class="mono">${c.permis||'—'}</td>
-    <td class="row-actions">${isAdmin() ? `<button class="btn small danger" onclick="deleteClient('${c.id}')">Suppr.</button>` : '—'}</td>
+    <td class="row-actions">${isAdmin() ? `<button class="btn icon danger" onclick="deleteClient('${c.id}')" title="Supprimer">🗑️</button>` : '—'}</td>
   </tr>`).join('')}
   </tbody></table>`;
 }
@@ -1213,6 +1221,42 @@ function applyDureePrevue(changedId){
   }
 }
 
+let editingRentalId = null;
+
+function editRental(id){
+  if(!requireAdmin()) return;
+  const r = rentals.find(x=>x.id===id);
+  if(!r){ toast('Location introuvable'); return; }
+  editingRentalId = id;
+
+  // Pré-remplit le formulaire avec les valeurs actuelles du contrat
+  document.getElementById('f_vehicule').value = r.vehId;
+  document.getElementById('f_client').value = r.cliId;
+  document.getElementById('f_dateDepart').value = r.dateDepart || '';
+  document.getElementById('f_heureDepart').value = r.heureDepart || '';
+  document.getElementById('f_kmDepart').value = r.kmDepart ?? '';
+  document.getElementById('f_dureePrevue').value = '';
+  document.getElementById('f_dateRetour').value = r.dateRetour || '';
+  document.getElementById('f_heureRetour').value = r.heureRetour || '';
+  document.getElementById('f_kmRetour').value = r.kmRetour ?? '';
+  document.getElementById('f_remise').value = r.remise ?? 0;
+  document.getElementById('f_fraisSupp').value = r.fraisSupp ?? 0;
+  document.getElementById('f_fraisSuppLabel').value = r.fraisSuppLabel || '';
+
+  // Ouvre le panneau et bascule son titre/bouton en mode "modification"
+  document.getElementById('newRentalPanel').style.display = '';
+  document.getElementById('newRentalPanelTitle').textContent = `Modifier le contrat ${fmtNum('CT-',r.numero)}`;
+  document.getElementById('rentalSubmitBtn').textContent = '💾 Enregistrer les modifications';
+  document.getElementById('newRentalPanel').scrollIntoView({behavior:'smooth', block:'start'});
+  updateVehiculePreview();
+  updateClientPreview();
+}
+function resetRentalFormMode(){
+  editingRentalId = null;
+  document.getElementById('newRentalPanelTitle').textContent = 'Nouvelle location';
+  document.getElementById('rentalSubmitBtn').textContent = '+ Ajouter la location';
+}
+
 async function addRental(){
   if(!requireAdmin()) return;
   const vehId=document.getElementById('f_vehicule').value;
@@ -1230,6 +1274,20 @@ async function addRental(){
   const v = fleet.find(x=>x.id===vehId);
   if(!vehId || !cliId){ toast('Choisir un véhicule et un client'); return; }
   if(!dateDepart || isNaN(kmDepart)){ toast('Renseigner la date et le km de départ'); return; }
+
+  if(editingRentalId){
+    // Mode modification : on met à jour le contrat existant, en gardant son
+    // numéro et sa date de création d'origine.
+    const existing = rentals.find(x=>x.id===editingRentalId);
+    const updatedRental = {...existing, vehId, cliId, dateDepart, heureDepart, kmDepart, dateRetour, heureRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise, fraisSupp, fraisSuppLabel};
+    const {error} = await sb.from('rentals').update(toDbRental(updatedRental)).eq('id', editingRentalId);
+    if(error){ toast('Erreur : '+error.message); return; }
+    ['f_dateDepart','f_heureDepart','f_kmDepart','f_dureePrevue','f_dateRetour','f_heureRetour','f_kmRetour','f_fraisSupp','f_fraisSuppLabel'].forEach(id=>document.getElementById(id).value='');
+    toggleNewRentalPanel();
+    await fetchAll(); renderAll(); toast('Contrat modifié');
+    return;
+  }
+
   const newRental = {id:uid('r'), numero:nextNumber(rentals), vehId, cliId, dateDepart, heureDepart, kmDepart, dateRetour, heureRetour, kmRetour, prixJour:v.prixJour, kmInclusJour:v.kmInclus, prixKmAdd:v.kmAdd, remise, fraisSupp, fraisSuppLabel};
   const {error} = await sb.from('rentals').insert(toDbRental(newRental));
   if(error){ toast('Erreur : '+error.message); return; }
@@ -1248,9 +1306,10 @@ function renderRentals(){
   ${sorted.map(r=>{
     const c = computeRental(r);
     const tag = c.status==='ongoing' ? '<span class="tag warn">En cours</span>' : c.status==='overrun' ? '<span class="tag bad">Dépassement</span>' : '<span class="tag ok">Terminée</span>';
-    const retourBtn = (isAdmin() && c.status==='ongoing') ? `<button class="btn small ghost" onclick="markReturned('${r.id}')">Marquer rendu</button>` : '';
-    const feesBtn = isAdmin() ? `<button class="btn small ghost" onclick="editFraisSupp('${r.id}')">Frais suppl.</button>` : '';
-    const deleteBtn = isAdmin() ? `<button class="btn small danger" onclick="deleteRental('${r.id}')">Suppr.</button>` : '';
+    const editBtn = isAdmin() ? `<button class="btn icon ghost" onclick="editRental('${r.id}')" title="Modifier ce contrat">✏️</button>` : '';
+    const retourBtn = (isAdmin() && c.status==='ongoing') ? `<button class="btn icon ghost" onclick="markReturned('${r.id}')" title="Clôturer (marquer rendu)">✅</button>` : '';
+    const feesBtn = isAdmin() ? `<button class="btn icon ghost" onclick="editFraisSupp('${r.id}')" title="Frais supplémentaires">💰</button>` : '';
+    const deleteBtn = isAdmin() ? `<button class="btn icon danger" onclick="deleteRental('${r.id}')" title="Supprimer">🗑️</button>` : '';
     return `<tr>
       <td class="mono">${fmtNum('CT-',r.numero)}</td>
       <td>${c.veh.nom}</td>
@@ -1262,7 +1321,7 @@ function renderRentals(){
       <td class="num">${fmtDA(c.total)}</td>
       <td class="num">${fmtDA(c.totalNet)}</td>
       <td>${tag}</td>
-      <td class="row-actions">${retourBtn}<button class="btn small ghost" onclick="goToContract('${r.id}')">🖶 Contrat</button>${feesBtn}${deleteBtn}</td>
+      <td class="row-actions">${editBtn}${retourBtn}<button class="btn icon ghost" onclick="goToContract('${r.id}')" title="Voir / imprimer le contrat">📄</button>${feesBtn}${deleteBtn}</td>
     </tr>`;
   }).join('')}
   </tbody></table>`;
@@ -1363,7 +1422,7 @@ function renderReservations(){
       <td class="mono">${fmtDate(r.dateFin)}</td>
       <td>${r.notes||'—'}</td>
       <td>${tag}</td>
-      <td class="row-actions">${isAdmin() ? `<button class="btn small ghost" onclick="editReservation('${r.id}')">Modifier</button><button class="btn small danger" onclick="deleteReservation('${r.id}')">Suppr.</button>` : '—'}</td>
+      <td class="row-actions">${isAdmin() ? `<button class="btn icon ghost" onclick="editReservation('${r.id}')" title="Modifier">✏️</button><button class="btn icon danger" onclick="deleteReservation('${r.id}')" title="Supprimer">🗑️</button>` : '—'}</td>
     </tr>`;
   }).join('')}
   </tbody></table>`;
