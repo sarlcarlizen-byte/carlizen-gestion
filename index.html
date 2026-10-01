@@ -25,13 +25,13 @@
     --mono: 'Courier New', monospace;
     --disp: 'Tahoma', 'Segoe UI', Arial, sans-serif;
     --body: 'Tahoma', 'Segoe UI', Arial, sans-serif;
-    --titlebar: linear-gradient(180deg,#5b9bf0 0%,#2a6fdb 18%,#1a56c7 55%,#0d47a8 100%);
+    --titlebar: linear-gradient(180deg,#4a86d8 0%,#1f58b8 18%,#123f8f 55%,#082c66 100%);
     --btn-grad: linear-gradient(180deg,#ffffff 0%,#f1f1f1 45%,#e2e2e2 50%,#f3f3f3 100%);
     --btn-grad-hover: linear-gradient(180deg,#ffffff 0%,#e3f2ff 45%,#c7e6ff 50%,#eef8ff 100%);
     --btn-grad-active: linear-gradient(180deg,#cfe4f5,#e8f3fb);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:linear-gradient(180deg,#7db2f0,#3a6fc4 45%,#1d4d9e);background-attachment:fixed;color:var(--text);font-family:var(--body);font-size:13.5px;font-weight:600;}
+  body{margin:0;background:linear-gradient(180deg,#5a8dc7,#2c548f 45%,#132d58);background-attachment:fixed;color:var(--text);font-family:var(--body);font-size:13.5px;font-weight:600;}
   ::-webkit-scrollbar{width:16px;height:16px;}
   ::-webkit-scrollbar-track{background:#dfe6ef;}
   ::-webkit-scrollbar-thumb{background:var(--btn-grad);border:1px solid #9eb6ce;border-radius:8px;}
@@ -82,8 +82,9 @@
   thead th{text-align:left;color:#0d47a8;font-weight:700;text-transform:none;font-size:11.5px;letter-spacing:0;padding:8px 10px;
     background:linear-gradient(180deg,#f4f8fd,#d9e8f7);border:1px solid #c0d0e0;}
   tbody td{padding:7px 10px;border:1px solid #e2e2e2;vertical-align:middle;font-weight:600;}
-  tbody tr:nth-child(even){background:#f3f6fb;}
-  tbody tr:hover{background:#cfe6ff;}
+  tbody tr:nth-child(odd){background:#ffffff;}
+  tbody tr:nth-child(even){background:#d6ebfc;}
+  tbody tr:hover{background:#9ccdf7 !important;}
   tbody tr:hover td{color:#0d3b78;}
   td.num, .mono{font-family:var(--mono);}
   .tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0;text-transform:none;border:1px solid transparent;}
