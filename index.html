@@ -1314,7 +1314,7 @@ function renderRentals(){
       <td class="num">${fmtDA(c.total)}</td>
       <td class="num">${fmtDA(c.totalNet)}</td>
       <td>${tag}</td>
-      <td class="row-actions">${editBtn}${retourBtn}<button class="btn icon ghost" onclick="goToContract('${r.id}')" title="Voir / imprimer le contrat">📄</button>${feesBtn}${deleteBtn}</td>
+      <td class="row-actions">${editBtn}${deleteBtn}<button class="btn icon ghost" onclick="goToContract('${r.id}')" title="Voir / imprimer le contrat">📄</button>${feesBtn}${retourBtn}</td>
     </tr>`;
   }).join('')}
   </tbody></table>`;
