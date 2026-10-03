@@ -63,7 +63,8 @@
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;border:2px solid var(--border);border-radius:6px;padding:14px;background:#f6f8fa;}
   .kpi{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
   .kpi .label{font-size:11px;color:var(--text-dim);text-transform:none;letter-spacing:0;font-weight:700;}
-  .kpi .value{font-family:var(--mono);font-size:31px;font-weight:900;margin-top:6px;color:var(--accent);}
+  .kpi .value{font-family:Arial, Helvetica, sans-serif;font-size:31px;font-weight:900;margin-top:8px;color:var(--accent);
+    display:inline-block;padding:4px 10px;border:1px solid var(--border);border-radius:4px;}
   .kpi.accent .value{color:var(--teal);}
   .kpi.danger .value{color:var(--danger);}
   .kpi.success .value{color:var(--success);}
